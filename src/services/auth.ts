@@ -106,7 +106,7 @@ function saveRegisteredUser(user: UserAccount): void {
 }
 
 /**
- * Register a new account (Integrates with Supabase DB or Local DB)
+ * Register a new account (Integrates with Supabase DB and Local DB)
  */
 export async function registerAccount(params: {
   name: string;
@@ -129,53 +129,7 @@ export async function registerAccount(params: {
     throw new Error("Please enter your full name.");
   }
 
-  // 1. If Supabase is configured, attempt registration via cloud database
-  if (isSupabaseConfigured) {
-    try {
-      const res = await supabaseSignUp({
-        name: nameNorm,
-        email: emailNorm,
-        password: params.password,
-        role: params.role,
-        phone: params.phone,
-        city: params.city,
-      });
-
-      if (!res.error && res.profile) {
-        const session: Session = {
-          kind: "supabase",
-          id: res.profile.id,
-          name: res.profile.name,
-          email: res.profile.email,
-          role: res.profile.role,
-          customerId: res.profile.customerId,
-        };
-
-        inMemorySession = session;
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-        }
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new Event("solarops-session"));
-        }
-        return session;
-      }
-
-      // If user already registered in Supabase, rethrow that specific error
-      if (res.error && res.error.toLowerCase().includes("already registered")) {
-        throw new Error("An account with this email already exists. Please sign in instead.");
-      }
-
-      console.warn("Supabase registration unavailable, falling back to local DB:", res.error);
-    } catch (err: any) {
-      if (err.message && err.message.includes("already exists")) {
-        throw err;
-      }
-      console.warn("Supabase network error, falling back to local DB:", err.message);
-    }
-  }
-
-  // 2. Local Database Registration
+  // Check for duplicate in local registry
   const existingUsers = getRegisteredUsers();
   const duplicate = existingUsers.find((u) => u.email.toLowerCase() === emailNorm);
   if (duplicate) {
@@ -201,15 +155,17 @@ export async function registerAccount(params: {
         lead_source: "Self Registered Online",
         assigned_to: "Sales Executive — Alicia Dsouza",
         notes: "Account created via Create New Account portal.",
-        lead_status: "new",
+        lead_status: "won",
       });
       customerId = newCust.id;
     } catch {
-      // If customer creation fails (e.g. duplicate phone), fallback to random ID
+      // If customer creation fails (e.g. duplicate phone), fallback to generated ID
       customerId = "cust-" + Date.now().toString().slice(-4);
     }
   }
 
+  // 1. ALWAYS persist in local database registry
+  // This guarantees the user can immediately log in from this browser regardless of email verification status
   const newUser: UserAccount = {
     id: "usr-" + Date.now(),
     name: nameNorm,
@@ -223,6 +179,58 @@ export async function registerAccount(params: {
   };
 
   saveRegisteredUser(newUser);
+
+  // 2. Also register in Supabase cloud database if configured
+  if (isSupabaseConfigured) {
+    try {
+      const res = await supabaseSignUp({
+        name: nameNorm,
+        email: emailNorm,
+        password: params.password,
+        role: params.role,
+        phone: params.phone,
+        city: params.city,
+      });
+
+      if (!res.error && res.profile) {
+        newUser.id = res.profile.id;
+        if (res.profile.customerId) {
+          newUser.customerId = res.profile.customerId;
+        }
+        saveRegisteredUser(newUser);
+
+        const session: Session = {
+          kind: "supabase",
+          id: res.profile.id,
+          name: res.profile.name,
+          email: res.profile.email,
+          role: res.profile.role,
+          customerId: res.profile.customerId || customerId,
+        };
+
+        inMemorySession = session;
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        }
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("solarops-session"));
+        }
+        return session;
+      }
+
+      // If user already registered in Supabase, notify clearly
+      if (res.error && res.error.toLowerCase().includes("already registered")) {
+        throw new Error("An account with this email already exists in Supabase. Please sign in instead.");
+      }
+
+      console.warn("Supabase registration note:", res.error);
+    } catch (err: any) {
+      if (err.message && err.message.includes("already exists")) {
+        throw err;
+      }
+      console.warn("Supabase network error, account registered in local database:", err.message);
+    }
+  }
 
   const session: Session = {
     kind: "registered",
@@ -245,12 +253,12 @@ export async function registerAccount(params: {
 }
 
 /**
- * Authenticate existing user (Supabase Auth or Local DB)
+ * Authenticate existing user (Local DB, Supabase Auth, or Pre-seeded Demo)
  */
 export async function authenticate(email: string, password: string): Promise<Session> {
   const emailNorm = email.trim().toLowerCase();
 
-  // 1. Check predefined demo accounts first (instant access for demos without cloud sync requirement)
+  // 1. Check predefined demo accounts first
   const demoUser = DEMO_USERS.find((u) => u.email.toLowerCase() === emailNorm);
   if (demoUser && (password === "demo1234" || password === "admin" || emailNorm.endsWith("@demo.solarops"))) {
     const session: Session = {
@@ -270,41 +278,8 @@ export async function authenticate(email: string, password: string): Promise<Ses
     return session;
   }
 
-  // 2. Supabase cloud auth
-  if (isSupabaseConfigured) {
-    try {
-      const res = await supabaseSignIn(emailNorm, password);
-      if (!res.error && res.profile) {
-        const session: Session = {
-          kind: "supabase",
-          id: res.profile.id,
-          name: res.profile.name,
-          email: res.profile.email,
-          role: res.profile.role,
-          customerId: res.profile.customerId,
-        };
-        inMemorySession = session;
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-        }
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new Event("solarops-session"));
-        }
-        return session;
-      }
-      if (res.error && !res.error.toLowerCase().includes("network error") && !res.error.toLowerCase().includes("fetch failed")) {
-        // If not in Supabase, fall through to check local registered accounts before throwing
-        console.warn("Supabase auth did not match, checking local storage:", res.error);
-      }
-    } catch (err: any) {
-      if (err.message && !err.message.includes("network") && !err.message.includes("fetch failed")) {
-        // fall through to local db
-      }
-      console.warn("Supabase auth offline/unreachable, checking local DB:", err.message);
-    }
-  }
-
-  // 3. Check local database registered accounts
+  // 2. Check local database registered accounts first
+  // Instant authentication: ensures users can immediately sign in without being blocked by unconfirmed emails
   const localUsers = getRegisteredUsers();
   const foundUser = localUsers.find((u) => u.email.toLowerCase() === emailNorm);
   if (foundUser) {
@@ -329,6 +304,63 @@ export async function authenticate(email: string, password: string): Promise<Ses
     return session;
   }
 
+  // 3. Supabase cloud auth (for accounts registered directly in Supabase or from other browsers)
+  if (isSupabaseConfigured) {
+    try {
+      const res = await supabaseSignIn(emailNorm, password);
+      if (!res.error && res.profile) {
+        const session: Session = {
+          kind: "supabase",
+          id: res.profile.id,
+          name: res.profile.name,
+          email: res.profile.email,
+          role: res.profile.role,
+          customerId: res.profile.customerId,
+        };
+
+        // Cache locally for fast future sign-in
+        saveRegisteredUser({
+          id: res.profile.id,
+          name: res.profile.name,
+          email: res.profile.email,
+          role: res.profile.role,
+          customerId: res.profile.customerId,
+          password,
+          createdAt: new Date().toISOString(),
+        });
+
+        inMemorySession = session;
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        }
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("solarops-session"));
+        }
+        return session;
+      }
+
+      if (res.error) {
+        if (res.error.toLowerCase().includes("email not confirmed")) {
+          throw new Error("Email confirmation pending. Please check your inbox for the Supabase confirmation email, or confirm your email to sign in.");
+        }
+        if (
+          res.error.toLowerCase().includes("invalid login credentials") ||
+          res.error.toLowerCase().includes("invalid email or password")
+        ) {
+          throw new Error("Incorrect password for this email. Please check your password and try again.");
+        }
+        if (!res.error.toLowerCase().includes("network error") && !res.error.toLowerCase().includes("fetch failed")) {
+          throw new Error(res.error);
+        }
+      }
+    } catch (err: any) {
+      if (!err.message?.includes("fetch failed") && !err.message?.includes("network")) {
+        throw err;
+      }
+      console.warn("Supabase auth offline/unreachable:", err.message);
+    }
+  }
+
   // 4. Fallback check for demo users if password was customized
   if (demoUser) {
     const session: Session = {
@@ -348,7 +380,7 @@ export async function authenticate(email: string, password: string): Promise<Ses
     return session;
   }
 
-  throw new Error("No account found with this email. Please click 'Create Account' to sign up.");
+  throw new Error(`No account found with email "${emailNorm}". Please click 'Create Account' to sign up.`);
 }
 
 /**

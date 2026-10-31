@@ -61,4 +61,22 @@ describe("SolarOps Database & Auth Integration", () => {
     // Invalid password
     await expect(authenticate("neha.gupta@test.com", "wrongpassword")).rejects.toThrow("Incorrect password");
   });
+
+  it("allows newly registered users to log out and log back in without 'No account found' error", async () => {
+    await registerAccount({
+      name: "Saleem Ahmed",
+      email: "saleem@myrooftop.com",
+      password: "strongpassword99",
+      role: "customer",
+      phone: "+91 99999 88888",
+      city: "Hyderabad",
+    });
+
+    // Re-authenticate
+    const session = await authenticate("saleem@myrooftop.com", "strongpassword99");
+    expect(session.name).toBe("Saleem Ahmed");
+    expect(session.email).toBe("saleem@myrooftop.com");
+    expect(session.role).toBe("customer");
+    expect(session.customerId).toBeDefined();
+  });
 });

@@ -32,7 +32,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   // Retrieve any previously registered local users
-  const registeredUsers = getRegisteredUsers();
+  const [registeredUsers, setRegisteredUsers] = useState(() => getRegisteredUsers());
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +78,7 @@ export default function LoginPage() {
         city: city.trim() || undefined,
       });
 
+      setRegisteredUsers(getRegisteredUsers());
       setSession(session);
       toast.success(
         `Account created successfully! Welcome, ${session.name}.`,
@@ -156,7 +157,7 @@ export default function LoginPage() {
             <div className="mb-5 flex rounded-xl bg-slate-100 p-1 border border-slate-200">
               <button
                 type="button"
-                onClick={() => { setMode("signin"); setError(""); }}
+                onClick={() => { setMode("signin"); setError(""); setRegisteredUsers(getRegisteredUsers()); }}
                 className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition cursor-pointer ${
                   mode === "signin"
                     ? "bg-white text-slate-900 shadow-sm"
