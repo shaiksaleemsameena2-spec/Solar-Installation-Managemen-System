@@ -113,6 +113,9 @@ export default function AppShell() {
               <span className="hidden sm:inline">Rooftop Sky View</span>
             </button>
             {DEMO_MODE ? <DemoPill /> : <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">Live data</span>}
+            <NavLink to="/" className="hidden items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11.5px] font-semibold text-slate-700 hover:bg-slate-50 sm:inline-flex">
+              <SunMedium className="h-3.5 w-3.5 text-emerald-600" /> Website Home
+            </NavLink>
             <NavLink to="/portal" className="hidden items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-[11.5px] font-semibold text-brand-800 hover:bg-brand-100 sm:inline-flex">
               <HeartHandshake className="h-3.5 w-3.5" /> Customer Portal
             </NavLink>

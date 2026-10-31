@@ -250,7 +250,27 @@ export async function registerAccount(params: {
 export async function authenticate(email: string, password: string): Promise<Session> {
   const emailNorm = email.trim().toLowerCase();
 
-  // 1. Supabase cloud auth
+  // 1. Check predefined demo accounts first (instant access for demos without cloud sync requirement)
+  const demoUser = DEMO_USERS.find((u) => u.email.toLowerCase() === emailNorm);
+  if (demoUser && (password === "demo1234" || password === "admin" || emailNorm.endsWith("@demo.solarops"))) {
+    const session: Session = {
+      kind: "demo",
+      name: demoUser.name,
+      email: demoUser.email,
+      role: demoUser.role,
+      customerId: demoUser.customerId,
+    };
+    inMemorySession = session;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("solarops-session"));
+    }
+    return session;
+  }
+
+  // 2. Supabase cloud auth
   if (isSupabaseConfigured) {
     try {
       const res = await supabaseSignIn(emailNorm, password);
@@ -273,17 +293,18 @@ export async function authenticate(email: string, password: string): Promise<Ses
         return session;
       }
       if (res.error && !res.error.toLowerCase().includes("network error") && !res.error.toLowerCase().includes("fetch failed")) {
-        throw new Error(res.error);
+        // If not in Supabase, fall through to check local registered accounts before throwing
+        console.warn("Supabase auth did not match, checking local storage:", res.error);
       }
     } catch (err: any) {
       if (err.message && !err.message.includes("network") && !err.message.includes("fetch failed")) {
-        throw err;
+        // fall through to local db
       }
       console.warn("Supabase auth offline/unreachable, checking local DB:", err.message);
     }
   }
 
-  // 2. Check local database registered accounts
+  // 3. Check local database registered accounts
   const localUsers = getRegisteredUsers();
   const foundUser = localUsers.find((u) => u.email.toLowerCase() === emailNorm);
   if (foundUser) {
@@ -308,8 +329,7 @@ export async function authenticate(email: string, password: string): Promise<Ses
     return session;
   }
 
-  // 3. Check demo predefined users
-  const demoUser = DEMO_USERS.find((u) => u.email.toLowerCase() === emailNorm);
+  // 4. Fallback check for demo users if password was customized
   if (demoUser) {
     const session: Session = {
       kind: "demo",

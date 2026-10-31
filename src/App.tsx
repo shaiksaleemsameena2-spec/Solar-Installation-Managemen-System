@@ -8,6 +8,7 @@ import { SolarBotWidget } from "@/components/solarbot/SolarBotWidget";
 
 // Route-level code splitting: each page bundle loads on first visit,
 // keeping the initial JS payload small (demo loads fast).
+const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const CustomersPage = lazy(() => import("@/pages/CustomersPage"));
 const CustomerDetailPage = lazy(() => import("@/pages/CustomerDetailPage"));
@@ -44,16 +45,22 @@ export default function App() {
     <ToastProvider>
       <Suspense fallback={<PageFallback />}>
       <Routes>
-        <Route path="/login" element={session && !isCustomer ? <Navigate to="/dashboard" replace /> : session && isCustomer ? <Navigate to="/portal" replace /> : <LoginPage />} />
-        <Route path="/portal" element={session ? <PortalShell /> : <Navigate to="/login" replace />}>
-          <Route index element={<PortalHome />} />
+        {/* Public Landing & Showcase Page */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Authentication & Account Creation */}
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Customer Self-Service Portal & Technician Locator */}
+        <Route path="/portal" element={<PortalShell />}>
+          <Route index element={!session ? <Navigate to="/login" replace /> : <PortalHome />} />
           <Route path="technician" element={<PortalTechnician />} />
         </Route>
+
+        {/* Staff Operations Workspaces */}
         <Route
-          path="/"
           element={!session ? <Navigate to="/login" replace /> : isCustomer ? <Navigate to="/portal" replace /> : <AppShell />}
         >
-          <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="customers/:id" element={<CustomerDetailPage />} />
@@ -69,8 +76,10 @@ export default function App() {
           <Route path="subsidies" element={<SubsidiesPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="settings" element={<SettingsPage />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
+
+        {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <SolarBotWidget />
       </Suspense>
