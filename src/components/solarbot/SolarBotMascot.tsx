@@ -315,3 +315,4 @@ export function SolarBotMascot({ onClick, isOpen, hasUnread = false }: Props) {
     </button>
   );
 }
+

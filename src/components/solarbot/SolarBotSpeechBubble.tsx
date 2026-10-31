@@ -54,3 +54,4 @@ export function SolarBotSpeechBubble({ onOpenChat, onDismiss }: Props) {
     </div>
   );
 }
+

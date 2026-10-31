@@ -41,3 +41,4 @@ describe("SolarBot AI Assistant Service", () => {
     expect(res.text).toContain("DC cables");
   });
 });
+
