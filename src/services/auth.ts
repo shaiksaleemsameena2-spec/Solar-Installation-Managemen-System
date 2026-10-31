@@ -129,37 +129,50 @@ export async function registerAccount(params: {
     throw new Error("Please enter your full name.");
   }
 
-  // 1. If Supabase is configured, register via cloud database
+  // 1. If Supabase is configured, attempt registration via cloud database
   if (isSupabaseConfigured) {
-    const res = await supabaseSignUp({
-      name: nameNorm,
-      email: emailNorm,
-      password: params.password,
-      role: params.role,
-      phone: params.phone,
-      city: params.city,
-    });
+    try {
+      const res = await supabaseSignUp({
+        name: nameNorm,
+        email: emailNorm,
+        password: params.password,
+        role: params.role,
+        phone: params.phone,
+        city: params.city,
+      });
 
-    if (res.error) {
-      throw new Error(res.error);
-    }
+      if (!res.error && res.profile) {
+        const session: Session = {
+          kind: "supabase",
+          id: res.profile.id,
+          name: res.profile.name,
+          email: res.profile.email,
+          role: res.profile.role,
+          customerId: res.profile.customerId,
+        };
 
-    const session: Session = {
-      kind: "supabase",
-      id: res.profile.id,
-      name: res.profile.name,
-      email: res.profile.email,
-      role: res.profile.role,
-      customerId: res.profile.customerId,
-    };
+        inMemorySession = session;
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        }
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("solarops-session"));
+        }
+        return session;
+      }
 
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      // If user already registered in Supabase, rethrow that specific error
+      if (res.error && res.error.toLowerCase().includes("already registered")) {
+        throw new Error("An account with this email already exists. Please sign in instead.");
+      }
+
+      console.warn("Supabase registration unavailable, falling back to local DB:", res.error);
+    } catch (err: any) {
+      if (err.message && err.message.includes("already exists")) {
+        throw err;
+      }
+      console.warn("Supabase network error, falling back to local DB:", err.message);
     }
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("solarops-session"));
-    }
-    return session;
   }
 
   // 2. Local Database Registration
@@ -239,26 +252,35 @@ export async function authenticate(email: string, password: string): Promise<Ses
 
   // 1. Supabase cloud auth
   if (isSupabaseConfigured) {
-    const res = await supabaseSignIn(emailNorm, password);
-    if (res.error) {
-      throw new Error(res.error);
+    try {
+      const res = await supabaseSignIn(emailNorm, password);
+      if (!res.error && res.profile) {
+        const session: Session = {
+          kind: "supabase",
+          id: res.profile.id,
+          name: res.profile.name,
+          email: res.profile.email,
+          role: res.profile.role,
+          customerId: res.profile.customerId,
+        };
+        inMemorySession = session;
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        }
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("solarops-session"));
+        }
+        return session;
+      }
+      if (res.error && !res.error.toLowerCase().includes("network error") && !res.error.toLowerCase().includes("fetch failed")) {
+        throw new Error(res.error);
+      }
+    } catch (err: any) {
+      if (err.message && !err.message.includes("network") && !err.message.includes("fetch failed")) {
+        throw err;
+      }
+      console.warn("Supabase auth offline/unreachable, checking local DB:", err.message);
     }
-    const session: Session = {
-      kind: "supabase",
-      id: res.profile.id,
-      name: res.profile.name,
-      email: res.profile.email,
-      role: res.profile.role,
-      customerId: res.profile.customerId,
-    };
-    inMemorySession = session;
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    }
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("solarops-session"));
-    }
-    return session;
   }
 
   // 2. Check local database registered accounts
