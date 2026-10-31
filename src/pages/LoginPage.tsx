@@ -6,6 +6,7 @@ import { DEMO_USERS, login as persistSession } from "@/services/auth";
 import { setSession } from "@/hooks/useSession";
 import { useToast } from "@/components/toast";
 import { DEMO_MODE } from "@/services";
+import { AnimatedSolarSky } from "@/components/AnimatedSolarSky";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -37,31 +38,36 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:grid-cols-2">
+    <AnimatedSolarSky className="min-h-screen p-4 flex items-center justify-center">
+      <div className="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-white/40 bg-white/92 shadow-2xl backdrop-blur-xl md:grid-cols-2">
         {/* Brand side */}
-        <div className="hidden flex-col justify-between bg-brand-800 p-8 text-white md:flex">
+        <div className="hidden flex-col justify-between bg-gradient-to-br from-emerald-950/90 via-emerald-900/85 to-brand-900/90 p-8 text-white backdrop-blur-md md:flex border-r border-white/10">
           <div>
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
-                <SunMedium className="h-6 w-6 text-lime-300" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 border border-white/20 shadow-inner">
+                <SunMedium className="h-6 w-6 text-lime-300 animate-pulse" />
               </div>
               <div>
-                <p className="text-lg font-bold">SolarOps AI</p>
+                <p className="text-lg font-bold tracking-tight">SolarOps AI</p>
                 <p className="text-xs text-brand-200">SunPower Solutions</p>
               </div>
             </div>
-            <p className="mt-8 text-2xl font-semibold leading-snug">From First Lead to Lifetime Solar Service.</p>
-            <p className="mt-3 text-sm leading-relaxed text-brand-200">
+            <p className="mt-8 text-2xl font-bold leading-snug text-white">
+              From First Lead to Lifetime Solar Service.
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-emerald-100/90">
               Manage enquiries, site surveys, quotations, inventory, serial-numbered equipment,
               installations, warranties, service, payments and analytics — in one connected platform.
             </p>
           </div>
-          <p className="text-[11px] text-brand-300">© 2026 SunPower Solutions · SolarOps AI</p>
+          <div className="flex items-center justify-between text-[11px] text-emerald-200/70 border-t border-white/10 pt-4">
+            <span>© 2026 SunPower Solutions</span>
+            <span>Live Solar Rooftop View</span>
+          </div>
         </div>
 
         {/* Form side */}
-        <div className="p-8">
+        <div className="p-8 bg-white/95">
           <div className="mb-6 flex items-center justify-between md:hidden">
             <div className="flex items-center gap-2">
               <SunMedium className="h-5 w-5 text-brand-700" />
@@ -70,7 +76,7 @@ export default function LoginPage() {
             <DemoPill />
           </div>
           <h1 className="text-lg font-bold text-slate-900">Sign in</h1>
-          <p className="mt-1 text-[13px] text-slate-500">Staff operations dashboard access.</p>
+          <p className="mt-1 text-[13px] text-slate-500">Staff operations dashboard & customer portal.</p>
           <form onSubmit={submit} className="mt-5 space-y-3.5">
             <div>
               <Label required>Email</Label>
@@ -93,7 +99,7 @@ export default function LoginPage() {
               </div>
             </div>
             {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{error}</p>}
-            <Button type="submit" size="lg" className="w-full" disabled={busy}>
+            <Button type="submit" size="lg" className="w-full shadow-md" disabled={busy}>
               <LogIn className="h-4 w-4" /> {busy ? "Signing in…" : "Sign in"}
             </Button>
           </form>
@@ -106,7 +112,7 @@ export default function LoginPage() {
                   <button
                     key={u.email}
                     onClick={() => { setEmail(u.email); setPassword("demo1234"); }}
-                    className="flex w-full items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-left text-[12px] hover:border-brand-300 hover:bg-brand-50/50"
+                    className="flex w-full items-center justify-between rounded-lg border border-slate-200/80 bg-white/70 px-3 py-2 text-left text-[12px] hover:border-brand-400 hover:bg-brand-50/70 transition shadow-xs"
                   >
                     <span>
                       <span className="font-semibold text-slate-700">{u.name}</span>
@@ -124,6 +130,6 @@ export default function LoginPage() {
           )}
         </div>
       </div>
-    </div>
+    </AnimatedSolarSky>
   );
 }

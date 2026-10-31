@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CheckCircle2, Circle, Zap, FileText, ShieldCheck, Wallet, Landmark, Wrench, Flag, Printer } from "lucide-react";
+import { CheckCircle2, Circle, Zap, FileText, ShieldCheck, Wallet, Landmark, Wrench, Flag, Printer, Sparkles } from "lucide-react";
 import { Card, CardHeader, Badge, Button, Input, Textarea, Label, Select, Modal, FieldError, StatTile, EmptyState, DemoPill } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import { useDB, api, resetDemoDB } from "@/services";
@@ -10,12 +10,14 @@ import { formatINR, formatDate, formatDateTime } from "@/lib/utils";
 import { PAYMENT_STAGE, SUBSIDY_STATUS, TICKET_STATUS, ISSUE_CATEGORIES, WARRANTY_STATUS } from "@/lib/labels";
 import { estimateAnnualSavings } from "@/lib/calculations/finance";
 import { cn } from "@/lib/utils";
+import { AnimatedSolarSky } from "@/components/AnimatedSolarSky";
 
 export default function PortalHome() {
   const session = useSession();
   const db = useDB();
   const [ticketModal, setTicketModal] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
+  const [showRooftopSky, setShowRooftopSky] = useState(true);
   if (!session?.customerId) return null;
   const cid = session.customerId;
   const customer = db.customers.find((c) => c.id === cid);
@@ -44,10 +46,33 @@ export default function PortalHome() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowRooftopSky(!showRooftopSky)}>
+            {showRooftopSky ? "Hide rooftop sky" : "Show rooftop sky"}
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setResetConfirm(true)}>Reset demo data</Button>
           <Button size="sm" onClick={() => setTicketModal(true)}><Wrench className="h-3.5 w-3.5" /> New service request</Button>
         </div>
       </div>
+
+      {/* Live Animated Solar Rooftop Banner */}
+      {showRooftopSky && (
+        <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 shadow-md">
+          <AnimatedSolarSky className="h-64 sm:h-80 w-full" showControls={true} autoPlay={true}>
+            <div className="absolute bottom-4 left-4 z-20 rounded-xl bg-slate-950/75 p-3.5 text-white backdrop-blur-md border border-white/20 max-w-sm shadow-xl">
+              <div className="flex items-center gap-1.5 text-amber-300 font-bold text-xs uppercase tracking-wider">
+                <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                <span>Live Rooftop PV Installation</span>
+              </div>
+              <p className="text-sm font-semibold text-slate-100 mt-1">
+                {activeProject ? `${activeProject.package_name} (${activeProject.capacity_kw} kW)` : "Residential Rooftop PV Array"}
+              </p>
+              <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">
+                Simulating continuous sunlight capture, dynamic sun elevation, and bird flock paths over your panels.
+              </p>
+            </div>
+          </AnimatedSolarSky>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

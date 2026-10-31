@@ -2,12 +2,13 @@ import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import {
   LayoutDashboard, Users, ClipboardCheck, FileText, Boxes, HardHat, ShieldCheck,
-  Wrench, Wallet, Landmark, BarChart3, Settings as Cog, LogOut, Menu, X, SunMedium, HeartHandshake,
+  Wrench, Wallet, Landmark, BarChart3, Settings as Cog, LogOut, Menu, X, SunMedium, HeartHandshake, Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession, logout } from "@/hooks/useSession";
 import { DEMO_MODE } from "@/services";
-import { DemoPill } from "@/components/ui";
+import { DemoPill, Modal } from "@/components/ui";
+import { AnimatedSolarSky } from "@/components/AnimatedSolarSky";
 
 const NAV = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -27,6 +28,7 @@ const NAV = [
 export default function AppShell() {
   const session = useSession();
   const [open, setOpen] = useState(false);
+  const [skyModalOpen, setSkyModalOpen] = useState(false);
   const navigate = useNavigate();
 
   return (
@@ -102,6 +104,14 @@ export default function AppShell() {
           </button>
           <p className="hidden text-[12px] text-slate-500 sm:block">From First Lead to Lifetime Solar Service</p>
           <div className="ml-auto flex items-center gap-3">
+            <button
+              onClick={() => setSkyModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1 text-[11.5px] font-semibold text-amber-900 hover:from-amber-100 hover:to-orange-100 transition shadow-xs"
+              title="Open Live Rooftop Solar Sky View"
+            >
+              <Sun className="h-3.5 w-3.5 text-amber-500 animate-spin [animation-duration:12s]" />
+              <span className="hidden sm:inline">Rooftop Sky View</span>
+            </button>
             {DEMO_MODE ? <DemoPill /> : <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">Live data</span>}
             <NavLink to="/portal" className="hidden items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-[11.5px] font-semibold text-brand-800 hover:bg-brand-100 sm:inline-flex">
               <HeartHandshake className="h-3.5 w-3.5" /> Customer Portal
@@ -112,6 +122,22 @@ export default function AppShell() {
           <Outlet />
         </main>
       </div>
+
+      {/* Full-view Modal for Animated Rooftop Sky */}
+      <Modal
+        open={skyModalOpen}
+        onClose={() => setSkyModalOpen(false)}
+        title="Live Rooftop Solar Villa · Sky & Birds Simulation"
+        width="max-w-5xl"
+      >
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-950">
+          <AnimatedSolarSky
+            className="h-[68vh] w-full"
+            showControls={true}
+            autoPlay={true}
+          />
+        </div>
+      </Modal>
     </div>
   );
 }
