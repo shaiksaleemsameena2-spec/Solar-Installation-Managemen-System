@@ -264,7 +264,9 @@ function AddSerialModal({ onClose }: { onClose: () => void }) {
       <div className="space-y-3">
         <FG label="Base item" required err={errors.item_id}>
           <Select value={form.item_id} onChange={(e) => setForm({ ...form, item_id: e.target.value })}>
+            <option value="">Select inventory item…</option>
             {db.inventory_items.map((i) => <option key={i.id} value={i.id}>{i.name} ({i.sku})</option>)}
+            {db.inventory_items.length === 0 && <option value="" disabled>No inventory items registered</option>}
           </Select>
         </FG>
         <FG label="Serial number" required err={errors.serial_number} hint="Scanning is optional — manual entry is fully supported. Uniqueness is enforced.">

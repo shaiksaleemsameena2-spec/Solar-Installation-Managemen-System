@@ -20,6 +20,7 @@ const InstallationsPage = lazy(() => import("@/pages/InstallationsPage"));
 const ProjectDetailPage = lazy(() => import("@/pages/ProjectDetailPage"));
 const WarrantiesPage = lazy(() => import("@/pages/WarrantiesPage"));
 const ServicePage = lazy(() => import("@/pages/ServicePage"));
+const TechniciansDirectoryPage = lazy(() => import("@/pages/TechniciansDirectoryPage"));
 const PaymentsPage = lazy(() => import("@/pages/PaymentsPage"));
 const SubsidiesPage = lazy(() => import("@/pages/SubsidiesPage"));
 const AnalyticsPage = lazy(() => import("@/pages/AnalyticsPage"));
@@ -48,6 +49,9 @@ export default function App() {
         {/* Public Landing & Showcase Page */}
         <Route path="/" element={<LandingPage />} />
 
+        {/* Public Nearby Service Persons & Technicians Directory */}
+        <Route path="/technicians" element={<TechniciansDirectoryPage />} />
+
         {/* Authentication & Account Creation */}
         <Route path="/login" element={<LoginPage />} />
 
@@ -72,6 +76,8 @@ export default function App() {
           <Route path="installations/:id" element={<ProjectDetailPage />} />
           <Route path="warranties" element={<WarrantiesPage />} />
           <Route path="service" element={<ServicePage />} />
+          <Route path="technicians" element={<TechniciansDirectoryPage />} />
+          <Route path="staff-locator" element={<TechniciansDirectoryPage />} />
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="subsidies" element={<SubsidiesPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />

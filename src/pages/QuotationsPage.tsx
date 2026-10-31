@@ -185,20 +185,24 @@ function CreateQuotationModal({ presetCustomer, onClose }: { presetCustomer?: st
       <div className="grid gap-3.5 sm:grid-cols-2">
         <FG label="Customer" required err={errors.customer_id} className="sm:col-span-2">
           <Select value={customerId} onChange={(e) => { setCustomerId(e.target.value); setSurveyId(""); }}>
+            <option value="">Select customer…</option>
             {db.customers.map((c) => <option key={c.id} value={c.id}>{c.full_name} · {c.city}</option>)}
+            {db.customers.length === 0 && <option value="" disabled>No registered customers found</option>}
           </Select>
         </FG>
         <FG label="Site survey (recommended from completed surveys)" className="sm:col-span-2">
           <Select value={surveyId} onChange={(e) => setSurveyId(e.target.value)}>
-            <option value="">No survey linked</option>
+            <option value="">No survey linked (Direct quote)</option>
             {surveys.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.roof_type} · {s.required_capacity_kw} kW</option>)}
           </Select>
         </FG>
         <FG label="Package" required err={errors.package_id} className="sm:col-span-2">
           <Select value={pkgId} onChange={(e) => setPkgId(e.target.value)}>
+            <option value="">Select solar package…</option>
             {db.solar_packages.filter((p) => p.is_active).map((p) => (
-              <option key={p.id} value={p.id}>{p.name} · {p.capacity_kw} kW · demo price {formatINR(p.equipment_cost)}</option>
+              <option key={p.id} value={p.id}>{p.name} · {p.capacity_kw} kW · {formatINR(p.equipment_cost)}</option>
             ))}
+            {db.solar_packages.length === 0 && <option value="" disabled>No active packages available</option>}
           </Select>
         </FG>
         <FG label="Installed cost override (optional, ₹)" hint="Leave blank to use package installation charges">

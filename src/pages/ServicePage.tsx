@@ -249,7 +249,7 @@ function ManagerAssignmentTab({
   };
 
   const handleDirectAssign = (ticketId: string, ticketNumber: string) => {
-    const chosenStaff = selectedStaffMap[ticketId];
+    const chosenStaff = selectedStaffMap[ticketId] || activeStaff[0]?.name;
     if (!chosenStaff) {
       toast.error("Select staff member", "Please select a staff member from the dropdown before assigning.");
       return;
@@ -318,17 +318,20 @@ function ManagerAssignmentTab({
                   {t.appointment_time ? t.appointment_time.replace("T", " ") : "Flexible"}
                 </Td>
                 <Td>
-                  <select
+                  <Select
                     value={currentSelected}
                     onChange={(e) => handleStaffChange(t.id, e.target.value)}
-                    className="w-full min-w-[190px] rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-800 shadow-sm focus:border-brand-500 focus:outline-none"
+                    className="w-full min-w-[210px]"
                   >
                     {activeStaff.map((s) => (
                       <option key={s.id} value={s.name}>
                         {s.name} ({s.location_name}) — ★ {s.rating}
                       </option>
                     ))}
-                  </select>
+                    {activeStaff.length === 0 && (
+                      <option value="" disabled>No active staff members found</option>
+                    )}
+                  </Select>
                 </Td>
                 <Td>
                   <div className="flex justify-end gap-1.5">
@@ -541,13 +544,16 @@ function StaffManagementTab({
 function AddStaffModal({ onClose }: { onClose: () => void }) {
   const toast = useToast();
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState("");
   const [locationName, setLocationName] = useState(HYD_LOCATION_PRESETS[0].name);
   const [lat, setLat] = useState(String(HYD_LOCATION_PRESETS[0].lat));
   const [lng, setLng] = useState(String(HYD_LOCATION_PRESETS[0].lng));
   const [experience, setExperience] = useState("4");
   const [workingHours, setWorkingHours] = useState("Mon–Sat 9:00–18:00");
-  const [spec, setSpec] = useState<string[]>(["Inverter Specialist", "Solar PV Rooftop"]);
+  const [primarySpec, setPrimarySpec] = useState("Inverter Specialist");
   const [err, setErr] = useState("");
 
   const handlePresetChange = (presetName: string) => {
@@ -561,6 +567,8 @@ function AddStaffModal({ onClose }: { onClose: () => void }) {
 
   const handleSave = () => {
     if (name.trim().length < 2) return setErr("Please enter the staff member's full name.");
+    if (!email.trim() || !/.+@.+\..+/.test(email.trim())) return setErr("Please enter a valid official email ID for the staff member.");
+    if (!password || password.length < 4) return setErr("Staff login password must be at least 4 characters long.");
     if (phone.trim().length < 7) return setErr("Please enter a valid phone number.");
     if (!locationName.trim()) return setErr("Please enter the base location name.");
     if (isNaN(Number(lat)) || isNaN(Number(lng))) return setErr("Please enter valid latitude and longitude coordinates.");
@@ -568,18 +576,20 @@ function AddStaffModal({ onClose }: { onClose: () => void }) {
     try {
       const created = api.createTechnician({
         name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
         phone: phone.trim(),
         location_name: locationName.trim(),
         lat: Number(lat),
         lng: Number(lng),
         experience_years: Number(experience) || 3,
         working_hours: workingHours,
-        specializations: spec,
+        specializations: [primarySpec, "Solar PV Rooftop"],
       });
 
       toast.success(
-        "Staff member added successfully",
-        `${created.name} is now registered in the operations team.`
+        "Staff member & login account created",
+        `${created.name} (${email.trim()}) can now sign in from the home page using their credentials.`
       );
       onClose();
     } catch (e: any) {
@@ -598,6 +608,50 @@ function AddStaffModal({ onClose }: { onClose: () => void }) {
             placeholder="e.g. Anand Varma"
             required
           />
+        </div>
+
+        {/* Staff Login Credentials (Email & Password) */}
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 space-y-2.5">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-950">
+            <Shield className="h-4 w-4 text-emerald-600" />
+            Staff Login Credentials (Login From Home Page)
+          </div>
+          <p className="text-[11px] text-emerald-800/80 leading-snug">
+            Set an official email ID and password. The staff member can use these credentials to sign in directly from the login page.
+          </p>
+
+          <div>
+            <Label required>Staff Email ID</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="e.g. anand@solarops.com"
+              required
+            />
+          </div>
+
+          <div>
+            <Label required>Set Login Password (min 4 characters)</Label>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="pr-9"
+              />
+              <button
+                type="button"
+                className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5">
@@ -621,13 +675,32 @@ function AddStaffModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div>
-          <Label>Working Hours</Label>
-          <Input
-            value={workingHours}
-            onChange={(e) => setWorkingHours(e.target.value)}
-            placeholder="Mon–Sat 9:00–18:00"
-          />
+        <div className="grid grid-cols-2 gap-2.5">
+          <div>
+            <Label>Primary Specialization</Label>
+            <Select value={primarySpec} onChange={(e) => setPrimarySpec(e.target.value)}>
+              {[
+                "Inverter Specialist",
+                "Solar PV Rooftop",
+                "High Voltage AC/DC & Wiring",
+                "Battery Storage Backup",
+                "Cleaning & Performance Maintenance",
+                "Structural / Elevated Roofing",
+                "Grid-Tie Systems Expert",
+                "Off-Grid Specialist",
+              ].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <Label>Working Hours</Label>
+            <Input
+              value={workingHours}
+              onChange={(e) => setWorkingHours(e.target.value)}
+              placeholder="Mon–Sat 9:00–18:00"
+            />
+          </div>
         </div>
 
         {/* Location & Coordinates */}
@@ -673,7 +746,7 @@ function AddStaffModal({ onClose }: { onClose: () => void }) {
             Cancel
           </Button>
           <Button onClick={handleSave}>
-            <UserPlus className="h-4 w-4" /> Save Staff Member
+            <UserPlus className="h-4 w-4" /> Save Staff Member & Credentials
           </Button>
         </div>
       </div>
@@ -865,9 +938,13 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const projects = db.installation_projects.filter((p) => p.customer_id === form.customer_id);
-  const units = db.equipment_units.filter(
-    (u) => u.project_id === form.project_id && ["installed", "dispatched", "in_stock"].includes(u.status)
-  );
+  const units = form.project_id
+    ? db.equipment_units.filter((u) => u.project_id === form.project_id)
+    : db.equipment_units.filter((u) => {
+        const p = db.installation_projects.find((proj) => proj.id === u.project_id);
+        return p?.customer_id === form.customer_id;
+      });
+  const displayUnits = units.length > 0 ? units : db.equipment_units.slice(0, 10);
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = () => {
@@ -908,11 +985,13 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
               setForm((f) => ({ ...f, equipment_unit_id: "" }));
             }}
           >
+            <option value="">Select customer…</option>
             {db.customers.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.full_name} ({c.city})
               </option>
             ))}
+            {db.customers.length === 0 && <option value="" disabled>No customers registered</option>}
           </Select>
         </FG>
         <FG label="Installation project (optional)" className="sm:col-span-2">
@@ -944,8 +1023,8 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
               }));
             }}
           >
-            <option value="">Not specified</option>
-            {units.map((u) => (
+            <option value="">General Rooftop System / Not specified</option>
+            {displayUnits.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.item_name} · {u.serial_number} ({u.status})
               </option>
@@ -1099,6 +1178,9 @@ function TicketDetailModal({ ticketId, onClose }: { ticketId: string; onClose: (
                     {s.name} ({s.location_name}) — ★ {s.rating}
                   </option>
                 ))}
+                {activeStaff.length === 0 && (
+                  <option value="" disabled>No active staff members found</option>
+                )}
               </Select>
             </div>
             <p className="text-[10.5px] text-emerald-800/80 mt-1">

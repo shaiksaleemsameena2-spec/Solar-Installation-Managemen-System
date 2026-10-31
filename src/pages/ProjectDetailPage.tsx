@@ -386,6 +386,7 @@ function ReserveModal({ projectId, warn, setWarn, onClose }: { projectId: string
             {db.inventory_items.map((i) => (
               <option key={i.id} value={i.id}>{i.name} — {i.available_qty} {i.unit} available ({i.reserved_qty} reserved)</option>
             ))}
+            {db.inventory_items.length === 0 && <option value="" disabled>No inventory items available</option>}
           </Select>
         </div>
         <div>

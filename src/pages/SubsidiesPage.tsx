@@ -123,7 +123,9 @@ function SubsidyModal({ app, onClose }: { app?: SubsidyApplication; onClose: () 
       <div className="grid gap-3.5 sm:grid-cols-2">
         <FG className="sm:col-span-2" label="Customer" required>
           <Select value={form.customer_id} onChange={(e) => set("customer_id", e.target.value)}>
+            <option value="">Select customer…</option>
             {db.customers.map((c) => <option key={c.id} value={c.id}>{c.full_name}</option>)}
+            {db.customers.length === 0 && <option value="" disabled>No registered customers found</option>}
           </Select>
         </FG>
         <FG className="sm:col-span-2" label="Installation project (optional)">

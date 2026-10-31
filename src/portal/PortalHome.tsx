@@ -395,9 +395,13 @@ function TicketModal({ open, onClose, customerId, projectId, units }: {
           </Select>
         </div>
         <div>
-          <Label>Equipment (if known)</Label>
+          <Label>Equipment / Component (if known)</Label>
           <Select value={form.equipment} onChange={(e) => setForm({ ...form, equipment: e.target.value })}>
-            <option value="none">Not sure / general issue</option>
+            <option value="none">General Rooftop Solar System / Not sure</option>
+            <option value="Solar Inverter">Solar Inverter (On-Grid / Hybrid)</option>
+            <option value="Solar PV Panels">Solar PV Panels (Mono PERC)</option>
+            <option value="AC/DC Distribution & Wiring">AC/DC Distribution & Wiring</option>
+            <option value="Battery Storage">Battery Storage & Backup</option>
             {units.map((u) => <option key={u.id} value={u.serial_number}>{u.item_name} — {u.serial_number}</option>)}
           </Select>
         </div>

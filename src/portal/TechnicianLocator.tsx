@@ -265,9 +265,13 @@ function RequestModal({ tech, onClose, customerId, customerName }: {
           </div>
         )}
         <div>
-          <Label required>Attach equipment (installed serial number)</Label>
-          <Select value={form.equipment} onChange={(e) => setForm({ ...form, equipment: e.target.value })}>
-            <option value="">Select equipment…</option>
+          <Label required>System Component / Installed Equipment</Label>
+          <Select value={form.equipment || "Full Rooftop Solar PV System"} onChange={(e) => setForm({ ...form, equipment: e.target.value })}>
+            <option value="Full Rooftop Solar PV System">Full Rooftop Solar PV System</option>
+            <option value="Solar Inverter (On-Grid / Hybrid)">Solar Inverter (On-Grid / Hybrid)</option>
+            <option value="Solar PV Panels (Mono PERC)">Solar PV Panels (Mono PERC)</option>
+            <option value="AC/DC Distribution Box & Wiring">AC/DC Distribution Box & Wiring</option>
+            <option value="Battery Storage Backup">Battery Storage Backup</option>
             {units.map((u) => <option key={u.id} value={u.serial_number}>{u.item_name} — {u.serial_number}</option>)}
           </Select>
         </div>
@@ -288,7 +292,7 @@ function RequestModal({ tech, onClose, customerId, customerName }: {
         </div>
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={submit} disabled={!form.equipment || !form.newTicket}>Submit to Manager</Button>
+          <Button onClick={submit} disabled={!form.newTicket}>Submit to Manager</Button>
         </div>
         {!form.newTicket && <p className="text-[11px] text-amber-700">Select "Create a new service request" to request this technician, or attach later from the ticket.</p>}
       </div>

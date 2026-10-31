@@ -223,6 +223,12 @@ function CustomerModal({ mode, customer, onClose, canWrite }: {
         </FG>
         <FG label="Assigned sales executive">
           <Select value={form.assigned_to} onChange={(e) => set("assigned_to", e.target.value)}>
+            <option value="">Select assigned staff…</option>
+            {db.technicians.filter((t) => t.is_active).map((t) => (
+              <option key={t.id} value={`${t.name} (Staff · ${t.location_name})`}>
+                {t.name} (Staff · {t.location_name})
+              </option>
+            ))}
             {["Sales Executive — Alicia Dsouza", "Sales Executive — Rahul Menon"].map((s) => <option key={s}>{s}</option>)}
           </Select>
         </FG>

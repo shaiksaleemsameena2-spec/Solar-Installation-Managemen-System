@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import L from "leaflet";
 import { MapPin, Navigation, Compass, Layers, CheckCircle, AlertCircle, Phone, Star, Wrench } from "lucide-react";
 import type { TechnicianProfile } from "@/types";
 
@@ -21,7 +22,6 @@ function loadGoogleMapsApi(): Promise<void> {
   if (window.__google_maps_loading__) return window.__google_maps_loading__;
 
   window.__google_maps_loading__ = new Promise((resolve, reject) => {
-    // Check if script tag already exists
     const existing = document.querySelector('script[src*="maps.googleapis.com"]');
     if (existing) {
       existing.addEventListener("load", () => resolve());
@@ -36,6 +36,13 @@ function loadGoogleMapsApi(): Promise<void> {
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("Network or API key error loading Google Maps"));
     document.head.appendChild(script);
+
+    // Timeout fallback after 4.5s
+    setTimeout(() => {
+      if (!window.google?.maps) {
+        reject(new Error("Google Maps load timeout"));
+      }
+    }, 4500);
   });
 
   return window.__google_maps_loading__;
@@ -71,31 +78,46 @@ export function GoogleMapView({
   const markersRef = useRef<any[]>([]);
   const infoWindowRef = useRef<any>(null);
 
-  const [loaded, setLoaded] = useState(false);
+  // Leaflet fallback ref
+  const leafletMapRef = useRef<L.Map | null>(null);
+  const leafletMarkersRef = useRef<L.Layer[]>([]);
+
+  const [useGoogle, setUseGoogle] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [mapType, setMapType] = useState<"roadmap" | "hybrid">("roadmap");
 
-  // 1. Load Google Maps API
+  // 1. Try loading Google Maps API
   useEffect(() => {
     let active = true;
     loadGoogleMapsApi()
       .then(() => {
-        if (active) setLoaded(true);
+        if (active && window.google?.maps) {
+          setUseGoogle(true);
+        }
       })
       .catch((err) => {
-        console.warn("Google Maps load fallback:", err.message);
-        if (active) setLoadError(err.message || "Failed to load Google Maps");
+        console.warn("Using Leaflet map engine:", err.message);
+        if (active) {
+          setLoadError(err.message || "Failed to load Google Maps");
+          setUseGoogle(false);
+        }
       });
     return () => {
       active = false;
     };
   }, []);
 
-  // 2. Initialize Google Map instance
+  // 2. Initialize Google Map instance if loaded
   useEffect(() => {
-    if (!loaded || !containerRef.current || !window.google?.maps) return;
+    if (!useGoogle || !containerRef.current || !window.google?.maps) return;
 
     if (!mapRef.current) {
+      // Destroy any leaflet map before initializing google map
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+
       const map = new window.google.maps.Map(containerRef.current, {
         center: { lat: center.lat, lng: center.lng },
         zoom,
@@ -104,12 +126,6 @@ export function GoogleMapView({
         streetViewControl: false,
         fullscreenControl: true,
         zoomControl: true,
-        styles: [
-          {
-            featureType: "poi.business",
-            stylers: [{ visibility: "off" }],
-          },
-        ],
       });
 
       infoWindowRef.current = new window.google.maps.InfoWindow();
@@ -124,7 +140,7 @@ export function GoogleMapView({
 
       mapRef.current = map;
     }
-  }, [loaded, zoom, mapType, onMapClick]);
+  }, [useGoogle, zoom, mapType, onMapClick]);
 
   // Toggle map type
   const toggleMapType = () => {
@@ -135,9 +151,9 @@ export function GoogleMapView({
     }
   };
 
-  // 3. Render Markers & InfoWindows
+  // 3. Render Google Maps Markers & InfoWindows
   useEffect(() => {
-    if (!loaded || !mapRef.current || !window.google?.maps) return;
+    if (!useGoogle || !mapRef.current || !window.google?.maps) return;
     const map = mapRef.current;
     const infoWindow = infoWindowRef.current;
 
@@ -145,7 +161,7 @@ export function GoogleMapView({
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
 
-    // A. Customer Location Marker (Gold / Emerald Sun badge)
+    // A. Customer Location Marker
     if (customerLocation || center) {
       const cPos = customerLocation || center;
       const custMarker = new window.google.maps.Marker({
@@ -166,9 +182,7 @@ export function GoogleMapView({
       custMarker.addListener("click", () => {
         infoWindow.setContent(`
           <div style="padding: 6px; font-family: system-ui, sans-serif; font-size: 12px; color: #0f172a;">
-            <div style="font-weight: 700; color: #b45309; display: flex; align-items: center; gap: 4px;">
-              ☀️ ${customerLocation?.label || "Customer Rooftop"}
-            </div>
+            <div style="font-weight: 700; color: #b45309;">☀️ ${customerLocation?.label || "Rooftop Location"}</div>
             <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
               Lat: ${cPos.lat.toFixed(4)}, Lng: ${cPos.lng.toFixed(4)}
             </div>
@@ -180,7 +194,7 @@ export function GoogleMapView({
       markersRef.current.push(custMarker);
     }
 
-    // B. Editable Pin Marker (For Manager marking / updating staff location)
+    // B. Editable Pin Marker (For Admin marking / updating staff location)
     if (editablePin) {
       const editMarker = new window.google.maps.Marker({
         position: { lat: editablePin.lat, lng: editablePin.lng },
@@ -209,6 +223,7 @@ export function GoogleMapView({
       }
 
       markersRef.current.push(editMarker);
+      map.panTo({ lat: editablePin.lat, lng: editablePin.lng });
     }
 
     // C. Staff / Technician Markers
@@ -239,9 +254,7 @@ export function GoogleMapView({
               <span>${tech.name}</span>
               <span style="color: #b45309; font-size: 11px;">★ ${tech.rating}</span>
             </div>
-            <div style="font-size: 11px; color: #475569; margin-top: 2px;">
-              📍 ${tech.location_name}
-            </div>
+            <div style="font-size: 11px; color: #475569; margin-top: 2px;">📍 ${tech.location_name}</div>
             <div style="font-size: 10.5px; color: #166534; background: #ecfdf5; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">
               ${tech.specializations.slice(0, 2).join(", ")}
             </div>
@@ -249,7 +262,7 @@ export function GoogleMapView({
               📞 <a href="tel:${tech.phone.replace(/\s/g, "")}" style="color: #0284c7; text-decoration: none;">${tech.phone}</a>
             </div>
             <div style="font-size: 10px; color: #64748b; margin-top: 3px;">
-              Experience: ${tech.experience_years} years · ${tech.working_hours}
+              ${tech.experience_years} yrs exp · ${tech.working_hours}
             </div>
           </div>
         `);
@@ -259,17 +272,112 @@ export function GoogleMapView({
       markersRef.current.push(techMarker);
     });
 
-    // Center map on selected technician if one was clicked
     if (selected) {
       map.panTo({ lat: selected.lat, lng: selected.lng });
+    } else if (center && !editablePin) {
+      map.panTo({ lat: center.lat, lng: center.lng });
     }
-  }, [loaded, technicians, selected, customerLocation, center, editablePin, onSelect, onMapClick]);
+  }, [useGoogle, technicians, selected, customerLocation, center, editablePin, onSelect, onMapClick]);
+
+  // 4. LEAFLET FALLBACK ENGINE (Guarantees map NEVER fails)
+  useEffect(() => {
+    if (useGoogle || !containerRef.current) return;
+
+    if (!leafletMapRef.current) {
+      const lMap = L.map(containerRef.current, {
+        zoomControl: true,
+        attributionControl: false,
+      }).setView([center.lat, center.lng], zoom);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+      }).addTo(lMap);
+
+      if (onMapClick) {
+        lMap.on("click", (e: L.LeafletMouseEvent) => {
+          onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
+        });
+      }
+
+      leafletMapRef.current = lMap;
+    }
+
+    const lMap = leafletMapRef.current;
+    if (!lMap) return;
+
+    // Clear old layers
+    leafletMarkersRef.current.forEach((m) => lMap.removeLayer(m));
+    leafletMarkersRef.current = [];
+
+    // A. Center / Customer marker
+    const cPos = customerLocation || center;
+    const centerMarker = L.circleMarker([cPos.lat, cPos.lng], {
+      radius: 9,
+      color: "#f59e0b",
+      fillColor: "#fbbf24",
+      fillOpacity: 0.9,
+      weight: 3,
+    }).addTo(lMap);
+    centerMarker.bindPopup(`<b>☀️ ${customerLocation?.label || "Rooftop Location"}</b><br>Lat: ${cPos.lat.toFixed(4)}, Lng: ${cPos.lng.toFixed(4)}`);
+    leafletMarkersRef.current.push(centerMarker);
+
+    // B. Editable Pin marker
+    if (editablePin) {
+      const editPin = L.circleMarker([editablePin.lat, editablePin.lng], {
+        radius: 12,
+        color: "#ffffff",
+        fillColor: "#ef4444",
+        fillOpacity: 1,
+        weight: 3,
+      }).addTo(lMap);
+      editPin.bindPopup(`<b>📍 ${editablePin.label || "Target Location"}</b><br>Lat: ${editablePin.lat.toFixed(4)}, Lng: ${editablePin.lng.toFixed(4)}`);
+      leafletMarkersRef.current.push(editPin);
+      lMap.panTo([editablePin.lat, editablePin.lng]);
+    }
+
+    // C. Staff markers
+    technicians.forEach((tech) => {
+      const isSel = selected?.id === tech.id;
+      const techPin = L.circleMarker([tech.lat, tech.lng], {
+        radius: isSel ? 12 : 9,
+        color: isSel ? "#fbbf24" : "#ffffff",
+        fillColor: tech.is_active ? "#059669" : "#64748b",
+        fillOpacity: 1,
+        weight: isSel ? 3 : 2,
+      }).addTo(lMap);
+
+      techPin.bindPopup(`
+        <div style="font-size: 12px; font-family: system-ui, sans-serif;">
+          <b style="color: #065f46;">${tech.name}</b> · ★ ${tech.rating}<br>
+          📍 ${tech.location_name}<br>
+          📞 ${tech.phone}<br>
+          <small>${tech.specializations.slice(0, 2).join(", ")}</small>
+        </div>
+      `);
+
+      techPin.on("click", () => {
+        if (onSelect) onSelect(tech);
+      });
+
+      leafletMarkersRef.current.push(techPin);
+    });
+
+    if (selected) {
+      lMap.panTo([selected.lat, selected.lng]);
+    } else if (center && !editablePin) {
+      lMap.panTo([center.lat, center.lng]);
+    }
+
+    setTimeout(() => lMap.invalidateSize(), 80);
+  }, [useGoogle, center, zoom, technicians, selected, customerLocation, editablePin, onSelect, onMapClick]);
 
   // Center reset helper
   const handleResetCenter = () => {
-    if (mapRef.current) {
+    if (useGoogle && mapRef.current) {
       mapRef.current.panTo({ lat: center.lat, lng: center.lng });
       mapRef.current.setZoom(zoom);
+    } else if (leafletMapRef.current) {
+      leafletMapRef.current.setView([center.lat, center.lng], zoom);
     }
   };
 
@@ -278,24 +386,26 @@ export function GoogleMapView({
       className={`relative w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm ${className}`}
       style={{ height }}
     >
-      {/* Google Maps Container */}
-      <div ref={containerRef} className="h-full w-full" />
+      {/* Map Canvas */}
+      <div ref={containerRef} className="h-full w-full" style={{ zIndex: 1 }} />
 
       {/* Floating Map Controls & Badges */}
       <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm backdrop-blur">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          Google Maps Live
+          {useGoogle ? "Google Maps Live" : "Interactive Map (Live)"}
         </span>
 
-        <button
-          type="button"
-          onClick={toggleMapType}
-          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white/95 px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-sm hover:bg-slate-50 transition backdrop-blur cursor-pointer"
-        >
-          <Layers className="h-3 w-3 text-brand-700" />
-          {mapType === "roadmap" ? "Satellite" : "Map"}
-        </button>
+        {useGoogle && (
+          <button
+            type="button"
+            onClick={toggleMapType}
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white/95 px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-sm hover:bg-slate-50 transition backdrop-blur cursor-pointer"
+          >
+            <Layers className="h-3 w-3 text-brand-700" />
+            {mapType === "roadmap" ? "Satellite" : "Map"}
+          </button>
+        )}
 
         <button
           type="button"
@@ -309,19 +419,7 @@ export function GoogleMapView({
 
       {onMapClick && (
         <div className="absolute bottom-3 left-3 z-10 rounded-lg border border-brand-200 bg-brand-50/95 px-3 py-1.5 text-[11px] font-medium text-brand-900 shadow-sm backdrop-blur">
-          💡 Click anywhere on the map or drag the pin to update coordinates
-        </div>
-      )}
-
-      {/* Fallback Banner if network blocks Google Maps CDN */}
-      {loadError && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
-          <AlertCircle className="h-8 w-8 text-amber-600 mb-2" />
-          <p className="font-semibold text-slate-800 text-sm">Google Maps API Offline / Sandboxed</p>
-          <p className="text-xs text-slate-500 max-w-md mt-1">
-            Using Google Maps API key <code className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">{GOOGLE_MAPS_API_KEY.slice(0, 10)}...</code>.
-            Ensure internet connectivity is enabled to render live Google tiles.
-          </p>
+          💡 Click anywhere on the map to set / update coordinates
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router";
 import {
   LayoutDashboard, Users, ClipboardCheck, FileText, Boxes, HardHat, ShieldCheck,
   Wrench, Wallet, Landmark, BarChart3, Settings as Cog, LogOut, Menu, X, SunMedium, HeartHandshake, Sun,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession, logout } from "@/hooks/useSession";
@@ -19,6 +20,7 @@ const NAV = [
   { to: "/installations", label: "Installations", icon: HardHat },
   { to: "/warranties", label: "Warranties", icon: ShieldCheck },
   { to: "/service", label: "Service Center", icon: Wrench },
+  { to: "/technicians", label: "Nearby Service Persons", icon: MapPin },
   { to: "/payments", label: "Payments & Expenses", icon: Wallet },
   { to: "/subsidies", label: "Subsidies", icon: Landmark },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },

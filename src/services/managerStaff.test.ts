@@ -129,3 +129,4 @@ describe("Manager Staff Management & Direct Assignment", () => {
     expect(updatedTicket?.assignment_status).toBe("awaiting_manager");
   });
 });
+

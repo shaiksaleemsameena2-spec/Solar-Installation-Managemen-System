@@ -187,6 +187,7 @@ function PaymentModal({ onClose }: { onClose: () => void }) {
               const c = db.customers.find((x) => x.id === p.customer_id);
               return <option key={p.id} value={p.id}>{p.number} · {c?.full_name} · {formatINR(p.contract_value)}</option>;
             })}
+            {db.installation_projects.length === 0 && <option value="" disabled>No active installation projects found</option>}
           </Select>
         </FG>
         <FG label="Amount (₹)" required err={errors.amount}><Input type="number" value={form.amount} onChange={(e) => set("amount", e.target.value)} /></FG>
@@ -243,7 +244,9 @@ function ExpenseModal({ onClose }: { onClose: () => void }) {
       <div className="grid gap-3.5 sm:grid-cols-2">
         <FG label="Project" required err={errors.project_id} className="sm:col-span-2">
           <Select value={form.project_id} onChange={(e) => set("project_id", e.target.value)}>
+            <option value="">Select project…</option>
             {db.installation_projects.map((p) => <option key={p.id} value={p.id}>{p.number} · {p.package_name}</option>)}
+            {db.installation_projects.length === 0 && <option value="" disabled>No active installation projects found</option>}
           </Select>
         </FG>
         <FG label="Category">

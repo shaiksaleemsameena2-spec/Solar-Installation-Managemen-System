@@ -88,7 +88,7 @@ export function getRegisteredUsers(): UserAccount[] {
 /**
  * Save user into local database registry
  */
-function saveRegisteredUser(user: UserAccount): void {
+export function saveRegisteredUser(user: UserAccount): void {
   const existing = getRegisteredUsers();
   const filtered = existing.filter((u) => u.email.toLowerCase() !== user.email.toLowerCase());
   filtered.push(user);
@@ -100,6 +100,64 @@ function saveRegisteredUser(user: UserAccount): void {
   } catch {
     // ignore
   }
+}
+
+/**
+ * Register a staff account created by Admin with Email ID and Password.
+ * Enables the staff member to log in from the login/home page and access the operations portal.
+ */
+export async function registerStaffAccount(params: {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  city?: string;
+}): Promise<UserAccount> {
+  const emailNorm = params.email.trim().toLowerCase();
+  const nameNorm = params.name.trim();
+
+  if (!emailNorm || !/.+@.+\..+/.test(emailNorm)) {
+    throw new Error("Please enter a valid email address for the staff member.");
+  }
+  if (!params.password || params.password.length < 4) {
+    throw new Error("Staff login password must be at least 4 characters long.");
+  }
+  if (!nameNorm) {
+    throw new Error("Please enter the staff member's full name.");
+  }
+
+  const existingUsers = getRegisteredUsers();
+  const duplicate = existingUsers.find((u) => u.email.toLowerCase() === emailNorm);
+
+  const staffUser: UserAccount = {
+    id: duplicate?.id || ("usr-staff-" + Date.now().toString().slice(-6)),
+    name: nameNorm,
+    email: emailNorm,
+    role: "staff",
+    password: params.password,
+    phone: params.phone,
+    city: params.city || "Hyderabad",
+    createdAt: duplicate?.createdAt || new Date().toISOString(),
+  };
+
+  saveRegisteredUser(staffUser);
+
+  if (isSupabaseConfigured) {
+    try {
+      await supabaseSignUp({
+        name: nameNorm,
+        email: emailNorm,
+        password: params.password,
+        role: "staff",
+        phone: params.phone,
+        city: params.city,
+      });
+    } catch (err: any) {
+      console.warn("Supabase staff sync note:", err.message);
+    }
+  }
+
+  return staffUser;
 }
 
 /**

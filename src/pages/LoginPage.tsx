@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { SunMedium, Eye, EyeOff, LogIn, UserPlus, ShieldCheck, UserCheck, Sparkles, Database } from "lucide-react";
-import { Button, Input, Label, DemoPill } from "@/components/ui";
+import { Button, Input, Label, Select, DemoPill } from "@/components/ui";
 import {
   DEMO_USERS,
   login as persistSession,
@@ -327,15 +327,14 @@ export default function LoginPage() {
                   {/* Role Selector — strictly 3 simplified roles: Customer, Staff, SuperAdmin */}
                   <div>
                     <Label required>Account Type / Role</Label>
-                    <select
+                    <Select
                       value={role}
                       onChange={(e) => setRole(e.target.value as Role)}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
                     >
                       <option value="customer">Customer (Home or Business Rooftop Owner)</option>
                       <option value="staff">Staff (Field Technician / Operations Engineer)</option>
                       <option value="superadmin">SuperAdmin (Operations Manager)</option>
-                    </select>
+                    </Select>
                   </div>
 
                   {/* Customer specific fields */}

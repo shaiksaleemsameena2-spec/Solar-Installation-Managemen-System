@@ -16,6 +16,7 @@ import {
   computeQuotationTotals, computeWarrantyDates,
 } from "@/lib/calculations/finance";
 import { DEFAULT_CHECKLIST } from "@/lib/labels";
+import { registerStaffAccount } from "./auth";
 
 export class OpError extends Error {}
 
@@ -939,10 +940,12 @@ export function updateTechnician(id: string, patch: Partial<Omit<TechnicianProfi
 }
 
 /**
- * Manager adds a new staff member
+ * Manager adds a new staff member with email and password login credentials
  */
 export function createTechnician(input: {
   name: string;
+  email?: string;
+  password?: string;
   phone: string;
   specializations: string[];
   experience_years?: number;
@@ -959,12 +962,29 @@ export function createTechnician(input: {
   assert(input.phone.trim().length >= 7, "Valid contact phone number is required.");
   assert(input.location_name.trim(), "Base location name is required.");
 
+  const emailNorm = input.email?.trim().toLowerCase() || `${input.name.trim().toLowerCase().replace(/\s+/g, ".")}@solarops.com`;
+  const pwd = input.password?.trim() || "demo1234";
+
+  // Register user account in auth system so staff can immediately log in from home page
+  try {
+    registerStaffAccount({
+      name: input.name.trim(),
+      email: emailNorm,
+      password: pwd,
+      phone: input.phone.trim(),
+      city: input.location_name.trim(),
+    });
+  } catch (err: any) {
+    console.warn("Staff account registration note:", err.message);
+  }
+
   const colors = ["#15803d", "#0e7490", "#a21caf", "#b45309", "#1d4ed8", "#047857"];
   const photo_color = colors[db.technicians.length % colors.length];
 
   const newTech: TechnicianProfile = {
     id: "tech-" + Date.now().toString().slice(-5),
     name: input.name.trim(),
+    email: emailNorm,
     photo_color,
     phone: input.phone.trim(),
     specializations: input.specializations?.length ? input.specializations : ["Inverter Specialist", "Solar PV Rooftop"],
@@ -985,7 +1005,7 @@ export function createTechnician(input: {
   mutate((db2) => {
     db2.technicians.push(newTech);
   });
-  logActivity("staff_added", `Manager added staff member: ${newTech.name} (${newTech.location_name})`, "technician", newTech.id);
+  logActivity("staff_added", `Manager added staff member: ${newTech.name} (${newTech.email})`, "technician", newTech.id);
   return newTech;
 }
 

@@ -173,6 +173,7 @@ function SurveyModal({ mode, survey, onClose }: { mode: "create" | "edit"; surve
           <Select value={form.customer_id} onChange={(e) => set("customer_id", e.target.value)}>
             <option value="">Select customer…</option>
             {customers.map((c) => <option key={c.id} value={c.id}>{c.full_name} · {c.city} ({c.customer_type})</option>)}
+            {customers.length === 0 && <option value="" disabled>No registered customers found (add a customer first)</option>}
           </Select>
         </FG>
         <FG label="Survey date" required>
@@ -180,6 +181,11 @@ function SurveyModal({ mode, survey, onClose }: { mode: "create" | "edit"; surve
         </FG>
         <FG label="Surveyor">
           <Select value={form.surveyor} onChange={(e) => set("surveyor", e.target.value)}>
+            {db.technicians.filter((t) => t.is_active).map((t) => (
+              <option key={t.id} value={`${t.name} (${t.location_name})`}>
+                {t.name} (Staff · {t.location_name})
+              </option>
+            ))}
             {["Kiran Babu (Surveyor)", "Deepak Rao (Surveyor)"].map((s) => <option key={s}>{s}</option>)}
           </Select>
         </FG>

@@ -117,8 +117,8 @@ export default function LandingPage() {
             <a href="#journey" className="hover:text-lime-300 transition flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 text-lime-400" /> Installation Journey
             </a>
-            <Link to="/portal/technician" className="hover:text-cyan-300 transition flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-cyan-400" /> Find Technician
+            <Link to="/technicians" className="hover:text-cyan-300 transition flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-cyan-400" /> Nearby Service Persons
             </Link>
           </nav>
 
@@ -586,10 +586,10 @@ export default function LandingPage() {
           </div>
 
           <Link
-            to="/portal/technician"
+            to="/technicians"
             className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-xs font-bold text-slate-950 hover:bg-cyan-300 shadow-lg shadow-cyan-950/50 transition shrink-0"
           >
-            <MapPin className="h-4 w-4" /> Open Technician Locator
+            <MapPin className="h-4 w-4" /> Find Nearby Service Persons
           </Link>
         </div>
       </section>
@@ -604,6 +604,7 @@ export default function LandingPage() {
           <div className="flex gap-4">
             <Link to="/login" className="hover:text-slate-300 transition">Sign In</Link>
             <Link to="/login" className="hover:text-slate-300 transition">Create Account</Link>
+            <Link to="/technicians" className="hover:text-slate-300 transition">Nearby Service Persons</Link>
             <Link to="/dashboard" className="hover:text-slate-300 transition">Operations Dashboard</Link>
             <Link to="/portal" className="hover:text-slate-300 transition">Customer Portal</Link>
           </div>

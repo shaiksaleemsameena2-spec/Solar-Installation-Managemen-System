@@ -377,6 +377,7 @@ export type TechnicianAvailability = "available" | "busy" | "off_duty" | "on_lea
 export interface TechnicianProfile {
   id: string;
   name: string;
+  email?: string;
   photo_color: string;
   phone: string;
   specializations: string[];

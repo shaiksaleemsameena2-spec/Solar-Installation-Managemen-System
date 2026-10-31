@@ -58,7 +58,29 @@ export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
   return <textarea className={cn(fieldCls, "min-h-[72px]", props.className)} {...props} />;
 }
 export function Select({ className, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={cn(fieldCls, className)} {...props}>{children}</select>;
+  // Extract width and flex layout tokens from className for the outer wrapper
+  const isCustomLayout = className?.match(/\b(w-\S+|flex-1|flex-auto|flex-initial|grow|shrink-0|max-w-\S+|min-w-\S+)\b/g);
+  const layoutClass = isCustomLayout ? isCustomLayout.join(" ") : "w-full";
+
+  return (
+    <div className={cn("relative inline-flex items-center", layoutClass)}>
+      <select
+        className={cn(
+          fieldCls,
+          "appearance-none pr-8 cursor-pointer text-slate-900 bg-white font-medium",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </select>
+      <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500">
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+    </div>
+  );
 }
 export function Label({ children, required, ...props }: React.LabelHTMLAttributes<HTMLLabelElement> & { required?: boolean }) {
   return (
