@@ -125,6 +125,7 @@ export function buildSeedDB(): { db: DemoDB; activity: number } {
     };
   };
 
+
   const quotations: Quotation[] = [
     mkQuotation("QT-2026-0001", "cust-01", "survey-01", solar_packages[2], [{ description: "Elevated structure for terrace access", amount: 4500 }], 3000, 39000, isoDate(30), "accepted", -38),
     mkQuotation("QT-2026-0002", "cust-02", "survey-02", solar_packages[1], [{ description: "Elevated structure (sheet roof)", amount: 6000 }], 2000, 36000, isoDate(30), "accepted", -74),

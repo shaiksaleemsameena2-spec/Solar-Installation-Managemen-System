@@ -2,7 +2,7 @@
 // SolarOps AI — domain types
 // ============================================================
 
-export type Role = "admin" | "sales" | "inventory" | "installation" | "service" | "customer";
+export type Role = "superadmin" | "staff" | "customer" | "admin" | "sales" | "inventory" | "installation" | "service";
 
 export interface Profile {
   id: string;
@@ -274,7 +274,7 @@ export interface Warranty {
 export type TicketStatus = "open" | "assigned" | "in_progress" | "waiting_parts" | "resolved" | "closed";
 export type TicketPriority = "low" | "medium" | "high" | "critical";
 export type AssignmentStatus =
-  | "requested" | "awaiting_confirmation" | "confirmed" | "in_progress" | "completed" | "cancelled";
+  | "awaiting_manager" | "assigned" | "requested" | "awaiting_confirmation" | "confirmed" | "in_progress" | "completed" | "cancelled";
 
 export interface ServiceTicket {
   id: string;

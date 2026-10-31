@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import L from "leaflet";
 import { MapPin, Star, Phone, Wrench, X, Crosshair } from "lucide-react";
 import { Button, Badge, Input, Select, Label, Modal, Textarea, FieldError, DemoPill, EmptyState } from "@/components/ui";
 import { useToast } from "@/components/toast";
@@ -9,6 +8,7 @@ import { haversineKm, cn } from "@/lib/utils";
 import { TECH_AVAILABILITY } from "@/lib/labels";
 import type { TechnicianProfile } from "@/types";
 import { printTechnicianRequestAck } from "@/lib/certificate";
+import { GoogleMapView } from "@/components/GoogleMapView";
 
 const SPECIALIZATIONS = ["Any specialization", "Inverter Specialist", "Electrical Works", "Performance Analysis", "Battery Systems", "Cleaning & Maintenance", "Structural/Roofing", "Off-grid", "Monitoring/App", "Grid-Tie Expert"];
 
@@ -123,15 +123,18 @@ export default function TechnicianLocator() {
           )}
         </div>
 
-        {/* Map */}
+        {/* Google Map View */}
         <div className="relative min-h-[520px] overflow-hidden rounded-xl border border-slate-200 bg-white">
-          {pos && <MapView center={pos} technicians={db.technicians.filter((t) => t.is_active)} onSelect={(t) => setSelected(t)} selected={selected} />}
-          <div className="pointer-events-none absolute left-3 top-3 z-[500] flex flex-col gap-1.5">
-            <span className="pointer-events-auto inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 shadow">
-              <MapPin className="h-3 w-3 text-brand-700" /> Your location (approx.)
-            </span>
-            <DemoPill className="pointer-events-auto w-fit" />
-          </div>
+          {pos && (
+            <GoogleMapView
+              center={pos}
+              technicians={db.technicians.filter((t) => t.is_active)}
+              onSelect={(t) => setSelected(t)}
+              selected={selected}
+              customerLocation={{ lat: pos.lat, lng: pos.lng, label: "Your Location" }}
+              height="520px"
+            />
+          )}
         </div>
       </div>
 
@@ -160,7 +163,7 @@ export default function TechnicianLocator() {
               <Fact label="Base location" value={selected.location_name} />
             </div>
             <div className="rounded-lg bg-slate-50 px-3 py-2 text-[11.5px] text-slate-500">
-              Rated numbers, availability and workload are recorded data, not live location claims.
+              Direct staff dispatch managed by SolarOps Operations Manager.
             </div>
             <div className="flex gap-2">
               <a href={`tel:${selected.phone.replace(/\s/g, "")}`} className="flex-1">
@@ -188,47 +191,7 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-// ---------- Leaflet map ----------
-function MapView({ center, technicians, onSelect, selected }: {
-  center: { lat: number; lng: number };
-  technicians: TechnicianProfile[];
-  onSelect: (t: TechnicianProfile) => void;
-  selected: TechnicianProfile | null;
-}) {
-  const ref = useMemo(() => ({ current: null as HTMLDivElement | null }), []);
-  const mapRef = useMemo(() => ({ current: null as L.Map | null }), []);
-
-  useEffect(() => {
-    if (!ref.current || mapRef.current) return;
-    const map = L.map(ref.current, { zoomControl: true, attributionControl: true }).setView([center.lat, center.lng], 11);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · Demo map (no API key required)',
-      maxZoom: 19,
-    }).addTo(map);
-    mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    // clear all marker layers except tile layer
-    map.eachLayer((l) => { if (!(l instanceof L.TileLayer)) map.removeLayer(l); });
-    const you = L.circleMarker([center.lat, center.lng], { radius: 9, color: "#15803d", fillColor: "#a3e635", fillOpacity: 0.9, weight: 2 }).addTo(map);
-    you.bindPopup("<b>You are here</b><br>Selected location (approx.)");
-    technicians.forEach((t) => {
-      const m = L.marker([t.lat, t.lng]).addTo(map);
-      m.bindTooltip(t.name, { direction: "top" });
-      m.on("click", () => onSelect(t));
-    });
-    if (!selected) map.setView([center.lat, center.lng], 11);
-  }, [center, technicians, onSelect, selected]);
-
-  return <div ref={(el) => { ref.current = el; if (el) setTimeout(() => mapRef.current?.invalidateSize(), 50); }} className="h-full min-h-[520px] w-full" style={{ zIndex: 1 }} />;
-}
-
-// ---------- Service request modal ----------
+// ---------- Service request modal (Direct Manager Assignment) ----------
 function RequestModal({ tech, onClose, customerId, customerName }: {
   tech: TechnicianProfile | null; onClose: () => void;
   customerId?: string; customerName?: string;
@@ -244,25 +207,39 @@ function RequestModal({ tech, onClose, customerId, customerName }: {
 
   const submit = () => {
     if (!tech) return;
-    if (!customerId) { setErr("Sign in as the demo customer to submit a request."); return; }
+    if (!customerId) { setErr("Sign in to submit a request."); return; }
     if (!form.equipment) return setErr("Select the installed equipment this visit is about.");
     if (form.issue.trim().length < 10) return setErr("Describe the issue in at least 10 characters.");
     const unit = units.find((u) => u.serial_number === form.equipment) ?? null;
+    
     if (!form.newTicket && openTickets.length) {
       const t = openTickets[0];
       api.updateTicket(t.id, {
-        assigned_technician: tech.name, appointment_time: form.time || null,
-        assignment_status: "requested",
+        appointment_time: form.time || null,
+        assignment_status: "awaiting_manager",
       });
-      toast.success(`Request sent to ${tech.name}`, `Attached to ticket ${t.number} — status: Requested.`);
+      toast.success(
+        "Request submitted to Manager",
+        `Attached to ticket ${t.number}. Operations Manager will assign staff to your rooftop.`
+      );
     } else {
       api.createTicket({
-        customer_id: customerId, project_id: myProj?.id ?? null, equipment_unit_id: unit?.id ?? null,
-        serial_number: unit?.serial_number ?? "", issue_category: form.category, description: form.issue,
-        priority: "medium", assigned_technician: tech.name, appointment_time: form.time || null,
-        created_by: "Customer Portal (demo)",
+        customer_id: customerId,
+        project_id: myProj?.id ?? null,
+        equipment_unit_id: unit?.id ?? null,
+        serial_number: unit?.serial_number ?? "",
+        issue_category: form.category,
+        description: `${form.issue} (Customer preferred technician: ${tech.name})`,
+        priority: "medium",
+        assigned_technician: "",
+        assignment_status: "awaiting_manager",
+        appointment_time: form.time || null,
+        created_by: "Customer Portal",
       });
-      toast.success(`Request sent to ${tech.name}`, "Status: Requested — the technician will confirm or you'll be reassigned.");
+      toast.success(
+        "Request submitted to Manager",
+        "Operations Manager will assign staff to your rooftop without delay."
+      );
     }
     printTechnicianRequestAck(form.newTicket ? "New ticket" : openTickets[0]?.number ?? "", tech.name, form.time);
     onClose();
@@ -273,8 +250,10 @@ function RequestModal({ tech, onClose, customerId, customerName }: {
     <Modal open={!!tech} onClose={onClose} title={`Request service · ${tech.name}`}>
       <div className="space-y-3.5">
         <div className="rounded-lg bg-brand-50 px-3 py-2 text-[12px] text-brand-800">
-          Requesting: <b>{tech.name}</b> — {TECH_AVAILABILITY[tech.availability]} · {tech.working_hours}
-          {tech.availability !== "available" && <span className="text-amber-700"> · Currently not marked available; request will go to the dispatch queue.</span>}
+          Preferred Staff: <b>{tech.name}</b> ({tech.location_name})
+          <span className="block mt-0.5 text-slate-500 text-[11px]">
+            Your request will be routed directly to the Operations Manager for staff dispatch.
+          </span>
         </div>
         {openTickets.length > 0 && (
           <div>
@@ -309,7 +288,7 @@ function RequestModal({ tech, onClose, customerId, customerName }: {
         </div>
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={submit} disabled={!form.equipment || !form.newTicket}>Send request</Button>
+          <Button onClick={submit} disabled={!form.equipment || !form.newTicket}>Submit to Manager</Button>
         </div>
         {!form.newTicket && <p className="text-[11px] text-amber-700">Select "Create a new service request" to request this technician, or attach later from the ticket.</p>}
       </div>

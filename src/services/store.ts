@@ -61,7 +61,9 @@ export function getVersion() {
 }
 
 export function resetDemoDB() {
-  localStorage.removeItem(KEY);
+  if (typeof localStorage !== "undefined") {
+    localStorage.removeItem(KEY);
+  }
   current = null;
   getDB();
   version++;

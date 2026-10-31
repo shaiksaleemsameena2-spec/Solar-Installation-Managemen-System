@@ -229,7 +229,7 @@ export default function LoginPage() {
                 {/* Quick Fill Accounts List */}
                 <div className="mt-5 border-t border-slate-100 pt-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                    Quick demo accounts — click to fill
+                    Quick demo accounts (SuperAdmin, Staff & Customer)
                   </p>
                   <div className="mt-2 space-y-1 max-h-36 overflow-y-auto">
                     {/* Registered users */}
@@ -324,7 +324,7 @@ export default function LoginPage() {
                     </div>
                   </div>
 
-                  {/* Role Selector */}
+                  {/* Role Selector — strictly 3 simplified roles: Customer, Staff, SuperAdmin */}
                   <div>
                     <Label required>Account Type / Role</Label>
                     <select
@@ -333,10 +333,8 @@ export default function LoginPage() {
                       className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
                     >
                       <option value="customer">Customer (Home or Business Rooftop Owner)</option>
-                      <option value="sales">Sales Executive (Leads & Quotations)</option>
-                      <option value="installation">Installation Engineer (Crews & Projects)</option>
-                      <option value="service">Service Technician (Field Maintenance)</option>
-                      <option value="inventory">Inventory Storekeeper (Stock & Serials)</option>
+                      <option value="staff">Staff (Field Technician / Operations Engineer)</option>
+                      <option value="superadmin">SuperAdmin (Operations Manager)</option>
                     </select>
                   </div>
 

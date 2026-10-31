@@ -42,12 +42,9 @@ export interface DemoUser {
 }
 
 export const DEMO_USERS: DemoUser[] = [
-  { name: "Admin (demo)", email: "admin@demo.solarops", role: "admin" },
-  { name: "Alicia Dsouza (demo)", email: "sales@demo.solarops", role: "sales" },
-  { name: "Farhan Storekeeper (demo)", email: "inventory@demo.solarops", role: "inventory" },
-  { name: "Sunil Khanna (demo)", email: "installation@demo.solarops", role: "installation" },
-  { name: "Mahesh K. (demo)", email: "service@demo.solarops", role: "service" },
-  { name: "Ramesh Gupta (demo customer)", email: "customer@demo.solarops", role: "customer", customerId: "cust-01" },
+  { name: "Operations Manager (SuperAdmin)", email: "admin@demo.solarops", role: "superadmin" },
+  { name: "Field Technician / Engineer (Staff)", email: "staff@demo.solarops", role: "staff" },
+  { name: "Ramesh Gupta (Customer)", email: "customer@demo.solarops", role: "customer", customerId: "cust-01" },
 ];
 
 let inMemoryUsers: UserAccount[] | null = null;
@@ -259,7 +256,14 @@ export async function authenticate(email: string, password: string): Promise<Ses
   const emailNorm = email.trim().toLowerCase();
 
   // 1. Check predefined demo accounts first
-  const demoUser = DEMO_USERS.find((u) => u.email.toLowerCase() === emailNorm);
+  let demoUser = DEMO_USERS.find((u) => u.email.toLowerCase() === emailNorm);
+  if (!demoUser && emailNorm === "superadmin@demo.solarops") {
+    demoUser = DEMO_USERS[0];
+  } else if (!demoUser && (emailNorm === "manager@demo.solarops")) {
+    demoUser = DEMO_USERS[0];
+  } else if (!demoUser && ["sales@demo.solarops", "inventory@demo.solarops", "installation@demo.solarops", "service@demo.solarops"].includes(emailNorm)) {
+    demoUser = DEMO_USERS[1];
+  }
   if (demoUser && (password === "demo1234" || password === "admin" || emailNorm.endsWith("@demo.solarops"))) {
     const session: Session = {
       kind: "demo",

@@ -378,9 +378,11 @@ function TicketModal({ open, onClose, customerId, projectId, units }: {
       customer_id: customerId, project_id: projectId,
       equipment_unit_id: unit?.id ?? null, serial_number: unit?.serial_number ?? "",
       issue_category: form.issue_category, description: form.description,
-      priority: "medium", created_by: "Customer Portal (demo)",
+      priority: "medium", created_by: "Customer Portal",
+      assigned_technician: "",
+      assignment_status: "awaiting_manager",
     });
-    toast.success("Service request submitted", `Ticket created. Our service team will contact you.`);
+    toast.success("Service request submitted", `Ticket created. Operations Manager will assign a staff technician to your rooftop.`);
     setForm(emptyTicket); setErr(""); onClose();
   };
   return (

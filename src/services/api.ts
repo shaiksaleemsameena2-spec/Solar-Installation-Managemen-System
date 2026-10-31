@@ -782,6 +782,25 @@ export function assignTicketTechnician(id: string, technician: string) {
   logActivity("ticket_assigned", `Ticket assigned to ${technician}`, "ticket", id);
 }
 
+/**
+ * Manager directly assigns staff to a customer service ticket.
+ * Directly assigns staff without sending any confirmation/acceptance request to staff.
+ */
+export function directAssignTicketStaff(id: string, staffName: string, appointmentTime?: string | null) {
+  const db = getDb();
+  const t = db.service_tickets.find((x) => x.id === id);
+  assert(t, "Ticket not found.");
+  assert(staffName.trim(), "Select a staff member to assign.");
+  mutate((db2) => {
+    t.assigned_technician = staffName.trim();
+    t.status = "assigned";
+    t.assignment_status = "assigned";
+    if (appointmentTime) t.appointment_time = appointmentTime;
+    t.updated_at = new Date().toISOString();
+  });
+  logActivity("ticket_assigned", `Manager directly assigned ticket ${t.number} to staff member ${staffName.trim()}`, "ticket", id, t.customer_id, t.project_id);
+}
+
 export function ticketConfirmAssignment(id: string, accept: boolean) {
   const db = getDb();
   const t = db.service_tickets.find((x) => x.id === id);
@@ -917,6 +936,94 @@ export function updateTechnician(id: string, patch: Partial<Omit<TechnicianProfi
   const t = db.technicians.find((x) => x.id === id);
   assert(t, "Technician profile not found.");
   mutate(() => { Object.assign(t, patch); });
+}
+
+/**
+ * Manager adds a new staff member
+ */
+export function createTechnician(input: {
+  name: string;
+  phone: string;
+  specializations: string[];
+  experience_years?: number;
+  location_name: string;
+  lat: number;
+  lng: number;
+  service_areas?: string[];
+  working_hours?: string;
+  availability?: TechnicianProfile["availability"];
+  rating?: number;
+}): TechnicianProfile {
+  const db = getDb();
+  assert(input.name.trim().length >= 2, "Staff member name must be at least 2 characters.");
+  assert(input.phone.trim().length >= 7, "Valid contact phone number is required.");
+  assert(input.location_name.trim(), "Base location name is required.");
+
+  const colors = ["#15803d", "#0e7490", "#a21caf", "#b45309", "#1d4ed8", "#047857"];
+  const photo_color = colors[db.technicians.length % colors.length];
+
+  const newTech: TechnicianProfile = {
+    id: "tech-" + Date.now().toString().slice(-5),
+    name: input.name.trim(),
+    photo_color,
+    phone: input.phone.trim(),
+    specializations: input.specializations?.length ? input.specializations : ["Inverter Specialist", "Solar PV Rooftop"],
+    experience_years: Number(input.experience_years) || 3,
+    location_name: input.location_name.trim(),
+    lat: Number(input.lat) || 17.385,
+    lng: Number(input.lng) || 78.4867,
+    service_areas: input.service_areas?.length ? input.service_areas : [input.location_name.trim()],
+    max_radius_km: 25,
+    working_hours: input.working_hours || "Mon–Sat 9:00–18:00",
+    availability: input.availability || "available",
+    rating: input.rating || 4.8,
+    completed_jobs: 0,
+    is_demo: true,
+    is_active: true,
+  };
+
+  mutate((db2) => {
+    db2.technicians.push(newTech);
+  });
+  logActivity("staff_added", `Manager added staff member: ${newTech.name} (${newTech.location_name})`, "technician", newTech.id);
+  return newTech;
+}
+
+/**
+ * Manager removes a staff member
+ */
+export function deleteTechnician(id: string): void {
+  const db = getDb();
+  const tech = db.technicians.find((t) => t.id === id);
+  assert(tech, "Staff member not found.");
+  mutate((db2) => {
+    db2.technicians = db2.technicians.filter((t) => t.id !== id);
+    // Unassign open tickets and return to manager queue
+    db2.service_tickets.forEach((t) => {
+      if (t.assigned_technician === tech.name && ["open", "assigned"].includes(t.status)) {
+        t.assigned_technician = "";
+        t.status = "open";
+        t.assignment_status = "awaiting_manager";
+      }
+    });
+  });
+  logActivity("staff_removed", `Manager removed staff member: ${tech.name}`, "technician", id);
+}
+
+/**
+ * Manager updates the geographical location of a staff member
+ */
+export function updateTechnicianLocation(id: string, lat: number, lng: number, location_name?: string): void {
+  const db = getDb();
+  const tech = db.technicians.find((t) => t.id === id);
+  assert(tech, "Staff member not found.");
+  assert(!isNaN(lat) && !isNaN(lng), "Invalid latitude/longitude coordinates.");
+  mutate(() => {
+    tech.lat = Number(lat);
+    tech.lng = Number(lng);
+    if (location_name?.trim()) tech.location_name = location_name.trim();
+  });
+  logActivity("staff_location_updated", `Manager updated location for ${tech.name} → ${location_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`}`, "technician", id);
 }
 
 // ==================== SETTINGS ====================

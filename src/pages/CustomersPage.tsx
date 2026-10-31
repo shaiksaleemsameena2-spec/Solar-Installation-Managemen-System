@@ -119,7 +119,7 @@ export default function CustomersPage() {
         )}
       </Card>
 
-      {modal && <CustomerModal mode={modal.mode} customer={modal.customer} onClose={() => setModal(null)} canWrite={session?.role === "sales" || session?.role === "admin"} />}
+      {modal && <CustomerModal mode={modal.mode} customer={modal.customer} onClose={() => setModal(null)} canWrite={session?.role === "superadmin" || session?.role === "staff" || session?.role === "admin" || session?.role === "sales"} />}
       <ConfirmDialog
         open={!!del} onClose={() => setDel(null)}
         title="Delete customer?" message={`Delete ${del?.full_name}? This only works if the customer has no installation projects.`}

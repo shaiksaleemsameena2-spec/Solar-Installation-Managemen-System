@@ -71,8 +71,14 @@ export const CREW_AVAILABILITY: Record<string, string> = {
 };
 
 export const ASSIGNMENT_STATUS: Record<string, string> = {
-  requested: "Requested", awaiting_confirmation: "Awaiting Confirmation", confirmed: "Confirmed",
-  in_progress: "In Progress", completed: "Completed", cancelled: "Cancelled",
+  awaiting_manager: "Awaiting Manager Assignment",
+  assigned: "Staff Assigned",
+  requested: "Requested",
+  awaiting_confirmation: "Awaiting Confirmation",
+  confirmed: "Confirmed",
+  in_progress: "In Progress",
+  completed: "Completed",
+  cancelled: "Cancelled",
 };
 
 export const TECH_AVAILABILITY: Record<string, string> = {

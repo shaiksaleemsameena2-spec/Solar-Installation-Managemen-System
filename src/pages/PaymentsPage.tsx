@@ -39,7 +39,7 @@ export default function PaymentsPage() {
 
   const expenses = db.project_expenses.slice().sort((a, b) => b.expense_date.localeCompare(a.expense_date));
   const expensesTotal = expenses.reduce((s, e) => s + e.amount, 0);
-  const canManage = session?.role === "admin" || session?.role === "sales" || session?.role === "inventory";
+  const canManage = session?.role === "superadmin" || session?.role === "staff" || session?.role === "admin" || session?.role === "sales" || session?.role === "inventory";
 
   return (
     <div className="space-y-5">
