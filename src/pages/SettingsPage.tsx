@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2, XCircle, RefreshCcw, SunMedium, Database, Sparkles, Calculator, MapPin } from "lucide-react";
+import { CheckCircle2, XCircle, RefreshCcw, SunMedium, Database, Sparkles, Calculator, MapPin, Bot, ShieldAlert } from "lucide-react";
 import { Card, CardHeader, PageHeader, Button, Input, Label, Badge, Modal } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import { useDB, api, resetDemoDB, DEMO_MODE } from "@/services";
@@ -166,6 +166,53 @@ export default function SettingsPage() {
               <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               AI text assistants and business calculations are strictly separated: financial totals are ALWAYS computed by validated application code (src/lib/calculations/finance.ts), never by the AI.
             </p>
+          </div>
+        </Card>
+
+        {/* SolarBot AI Knowledge Base */}
+        <Card className="lg:col-span-2">
+          <CardHeader
+            title="SolarBot AI Assistant — Knowledge Base & Status"
+            subtitle="Verified domain guidelines, package catalogs, and security rules powering the floating assistant"
+            action={<Badge status="approved" label="SolarBot Active" className="!bg-emerald-100 !text-emerald-800" />}
+          />
+          <div className="grid gap-4 p-4 md:grid-cols-3">
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+              <p className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                <Bot className="h-4 w-4 text-emerald-600" /> System Sizing & Packages
+              </p>
+              <ul className="mt-2 space-y-1 text-[11.5px] text-slate-600">
+                <li>• <b>{db.solar_packages.length} Packages:</b> 1 kW, 2 kW, 3 kW, 5 kW On-Grid & Off-Grid</li>
+                <li>• <b>Generation baseline:</b> ~4.5 kWh/day per kW</li>
+                <li>• <b>Roof space rule:</b> ~80–100 sq.ft per kW</li>
+                <li>• <b>Payback benchmark:</b> 3.0 to 4.5 years</li>
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+              <p className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                <Sparkles className="h-4 w-4 text-amber-500" /> Government Subsidies
+              </p>
+              <ul className="mt-2 space-y-1 text-[11.5px] text-slate-600">
+                <li>• <b>Scheme:</b> PM Surya Ghar Muft Bijli Yojana</li>
+                <li>• <b>1 kW Subsidy:</b> ₹30,000</li>
+                <li>• <b>2 kW Subsidy:</b> ₹60,000</li>
+                <li>• <b>3 kW+ Cap:</b> ₹78,000 max central aid</li>
+                <li>• <b>Official Portal:</b> <span className="font-mono text-[10.5px]">pmsuryaghar.gov.in</span></li>
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+              <p className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                <ShieldAlert className="h-4 w-4 text-rose-500" /> Safety & Data Isolation
+              </p>
+              <ul className="mt-2 space-y-1 text-[11.5px] text-slate-600">
+                <li>• <b>High-Voltage Rule:</b> Never instruct users to touch live DC cables</li>
+                <li>• <b>Data Privacy:</b> Private orders/warranties require login</li>
+                <li>• <b>Customer Isolation:</b> Strict scoping to own customerId</li>
+                <li>• <b>Support Line:</b> +91 90000 76527</li>
+              </ul>
+            </div>
           </div>
         </Card>
 

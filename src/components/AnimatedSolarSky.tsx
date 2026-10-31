@@ -804,3 +804,4 @@ export function AnimatedSolarSky({
     </div>
   );
 }
+

@@ -4,6 +4,7 @@ import { ToastProvider } from "@/components/toast";
 import { useSession } from "@/hooks/useSession";
 import LoginPage from "@/pages/LoginPage";
 import AppShell from "@/layout/AppShell";
+import { SolarBotWidget } from "@/components/solarbot/SolarBotWidget";
 
 // Route-level code splitting: each page bundle loads on first visit,
 // keeping the initial JS payload small (demo loads fast).
@@ -71,6 +72,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>
+      <SolarBotWidget />
       </Suspense>
     </ToastProvider>
   );

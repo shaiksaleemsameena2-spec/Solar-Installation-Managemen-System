@@ -13,12 +13,14 @@ let version = 0;
 export function getDB(): DemoDB {
   if (current) return current;
   try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as DemoDB;
-      if (parsed && Array.isArray(parsed.customers)) {
-        current = parsed;
-        return current;
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as DemoDB;
+        if (parsed && Array.isArray(parsed.customers)) {
+          current = parsed;
+          return current;
+        }
       }
     }
   } catch {
@@ -31,7 +33,9 @@ export function getDB(): DemoDB {
 
 function persist() {
   try {
-    if (current) localStorage.setItem(KEY, JSON.stringify(current));
+    if (typeof localStorage !== "undefined" && current) {
+      localStorage.setItem(KEY, JSON.stringify(current));
+    }
   } catch (e) {
     console.warn("Demo persistence failed (storage full?)", e);
   }
