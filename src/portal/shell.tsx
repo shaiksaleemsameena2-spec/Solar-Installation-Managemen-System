@@ -4,6 +4,7 @@ import { SunMedium, LogOut, HeartHandshake, Search, LayoutDashboard, Eye, ArrowL
 import { useSession, logout } from "@/hooks/useSession";
 import { useDB } from "@/services";
 import { DemoPill } from "@/components/ui";
+import { SunPowerLogo } from "@/components/SunPowerLogo";
 import { cn } from "@/lib/utils";
 
 export function PortalShell() {
@@ -78,9 +79,9 @@ export function PortalShell() {
 
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white no-print">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4">
-          <SunMedium className="h-5 w-5 text-brand-700" />
+          <SunPowerLogo size="sm" variant="light" />
           <div className="leading-tight">
-            <p className="text-sm font-bold text-slate-900">SolarOps AI · Customer Portal</p>
+            <p className="text-sm font-bold text-slate-900">SunPower · Customer Portal</p>
             <p className="text-[10px] text-slate-400">
               {customer?.full_name ?? session?.name ?? "Customer"} · {customer?.city || "India"}
             </p>

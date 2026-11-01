@@ -163,7 +163,7 @@ export default function TechnicianLocator() {
               <Fact label="Base location" value={selected.location_name} />
             </div>
             <div className="rounded-lg bg-slate-50 px-3 py-2 text-[11.5px] text-slate-500">
-              Direct staff dispatch managed by SolarOps Operations Manager.
+              Direct staff dispatch managed by SunPower Operations Manager.
             </div>
             <div className="flex gap-2">
               <a href={`tel:${selected.phone.replace(/\s/g, "")}`} className="flex-1">

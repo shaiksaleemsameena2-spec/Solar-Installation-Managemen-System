@@ -13,6 +13,7 @@ import { setSession } from "@/hooks/useSession";
 import { useToast } from "@/components/toast";
 import { DEMO_MODE } from "@/services";
 import { AnimatedSolarSky } from "@/components/AnimatedSolarSky";
+import { SunPowerLogo } from "@/components/SunPowerLogo";
 import { isSupabaseConfigured } from "@/services/supabase";
 import type { Role } from "@/types";
 
@@ -99,12 +100,10 @@ export default function LoginPage() {
         <div className="hidden flex-col justify-between bg-gradient-to-br from-emerald-950/90 via-emerald-900/85 to-brand-900/90 p-8 text-white backdrop-blur-md md:flex border-r border-white/10">
           <div>
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 border border-white/20 shadow-inner">
-                <SunMedium className="h-6 w-6 text-lime-300 animate-pulse" />
-              </div>
+              <SunPowerLogo size="lg" variant="glass" />
               <div>
-                <p className="text-lg font-bold tracking-tight">SolarOps AI</p>
-                <p className="text-xs text-brand-200">SunPower Solutions</p>
+                <p className="text-lg font-bold tracking-tight text-white">SunPower</p>
+                <p className="text-xs text-brand-200">Solar Operations Platform</p>
               </div>
             </div>
             <p className="mt-8 text-2xl font-bold leading-snug text-white">
@@ -139,8 +138,8 @@ export default function LoginPage() {
           <div>
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2 md:hidden">
-                <SunMedium className="h-5 w-5 text-brand-700" />
-                <p className="text-base font-bold text-slate-900">SolarOps AI</p>
+                <SunPowerLogo size="xs" variant="light" />
+                <p className="text-base font-bold text-slate-900">SunPower</p>
               </div>
 
               {isSupabaseConfigured ? (
@@ -183,7 +182,7 @@ export default function LoginPage() {
             {/* 1. SIGN IN FORM */}
             {mode === "signin" && (
               <div>
-                <h1 className="text-lg font-bold text-slate-900">Sign in to SolarOps</h1>
+                <h1 className="text-lg font-bold text-slate-900">Sign in to SunPower</h1>
                 <p className="mt-0.5 text-[12.5px] text-slate-500">Access operations dashboard or customer portal.</p>
 
                 <form onSubmit={handleSignIn} className="mt-4 space-y-3">

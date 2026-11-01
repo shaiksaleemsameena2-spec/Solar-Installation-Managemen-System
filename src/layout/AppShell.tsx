@@ -10,6 +10,7 @@ import { useSession, logout } from "@/hooks/useSession";
 import { DEMO_MODE } from "@/services";
 import { DemoPill, Modal } from "@/components/ui";
 import { AnimatedSolarSky } from "@/components/AnimatedSolarSky";
+import { SunPowerLogo } from "@/components/SunPowerLogo";
 
 const NAV = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -43,12 +44,10 @@ export default function AppShell() {
         open ? "translate-x-0" : "-translate-x-full",
       )}>
         <div className="flex h-14 items-center gap-2.5 border-b border-slate-100 px-4">
-          <div className="flex h-8.5 w-8.5 items-center justify-center rounded-lg bg-brand-700 text-white">
-            <SunMedium className="h-4.5 w-4.5" />
-          </div>
+          <SunPowerLogo size="sm" variant="light" />
           <div className="leading-tight">
-            <p className="text-sm font-bold text-slate-900">SolarOps AI</p>
-            <p className="text-[10px] font-medium text-slate-400">SunPower Solutions</p>
+            <p className="text-sm font-bold text-slate-900">SunPower</p>
+            <p className="text-[10px] font-medium text-slate-400">Solar Operations AI</p>
           </div>
           <button className="ml-auto text-slate-400 lg:hidden" onClick={() => setOpen(false)}>
             <X className="h-4 w-4" />

@@ -354,7 +354,7 @@ function SavingsEstimator({ capacityKw, monthlyUnits }: { capacityKw: number; mo
         </div>
       </div>
       <p className="text-[11px] text-slate-400 md:col-span-2">
-        <Flag className="mr-1 inline h-3 w-3" /> This is a mathematical estimate only — actual savings depend on weather, generation and tariffs. SolarOps AI does not access live generation data.
+        <Flag className="mr-1 inline h-3 w-3" /> This is a mathematical estimate only — actual savings depend on weather, generation and tariffs. SunPower does not access live generation data.
       </p>
     </div>
   );

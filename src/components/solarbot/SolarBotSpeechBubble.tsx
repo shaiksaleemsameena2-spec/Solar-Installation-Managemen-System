@@ -40,7 +40,7 @@ export function SolarBotSpeechBubble({ onOpenChat, onDismiss }: Props) {
       {/* Action CTA */}
       <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2.5">
         <span className="text-[10.5px] text-slate-400 flex items-center gap-1">
-          <Sparkles className="h-3 w-3 text-amber-400" /> Powered by SolarOps AI
+          <Sparkles className="h-3 w-3 text-amber-400" /> Powered by SunPower
         </span>
         <button
           type="button"

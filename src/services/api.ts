@@ -718,7 +718,7 @@ export function activateWarranties(projectId: string): { created: number; messag
           return { start_date: dts.start_date, end_date: dts.end_date };
         })(),
         duration_months: months,
-        terms: "Manufacturer product warranty registered against serial numbers tracked by SolarOps AI. Application-generated certificate — SunPower Solutions is not the manufacturer.",
+        terms: "Manufacturer product warranty registered against serial numbers tracked by SunPower. Application-generated certificate — SunPower Solutions is not the manufacturer.",
         status: "active" as const,
         created_at: new Date().toISOString(),
       };

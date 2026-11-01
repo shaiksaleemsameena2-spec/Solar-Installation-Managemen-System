@@ -195,7 +195,7 @@ export async function processSolarBotQuery(
       id: "bot-" + Date.now(),
       sender: "bot",
       timestamp,
-      text: `Staff mode: We have ${db.installation_projects.length} installation projects recorded in SolarOps AI (${db.installation_projects.filter((p) => p.status === "in_progress").length} currently in progress). You can manage them in the **Installations** menu.`,
+      text: `Staff mode: We have ${db.installation_projects.length} installation projects recorded in SunPower (${db.installation_projects.filter((p) => p.status === "in_progress").length} currently in progress). You can manage them in the **Installations** menu.`,
       source: "expert_rules",
     };
   }
@@ -238,7 +238,7 @@ export async function processSolarBotQuery(
 
   // 2. Try Live AI Proxy (if available and configured)
   // -------------------------------------------------------------
-  const systemPrompt = `You are "SolarBot", the intelligent AI solar assistant for SunPower Solutions and SolarOps AI (Hyderabad, Telangana, India).
+  const systemPrompt = `You are "SolarBot", the intelligent AI solar assistant for SunPower (Hyderabad, Telangana, India).
 Tone: Friendly, highly competent, professional, helpful, and concise.
 Rules:
 - Give accurate information regarding solar rooftop panels (1kW to 10kW), on-grid vs off-grid systems, inverters, and warranties.

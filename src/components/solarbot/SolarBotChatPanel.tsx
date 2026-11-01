@@ -28,7 +28,7 @@ interface Props {
   session: UserSessionInfo | null;
 }
 
-const INITIAL_WELCOME = `Hello! 👋 Welcome to SolarOps AI.
+const INITIAL_WELCOME = `Hello! 👋 Welcome to SunPower.
 
 I'm SolarBot, your personal solar assistant. ☀️
 
@@ -351,7 +351,7 @@ export function SolarBotChatPanel({ isOpen, onClose, onMinimize, session }: Prop
             </span>
             <button
               type="button"
-              onClick={() => handleSend("Tell me about SolarOps packages and pricing")}
+              onClick={() => handleSend("Tell me about SunPower packages and pricing")}
               className="flex items-center gap-1 rounded bg-rose-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-rose-500"
             >
               <RefreshCw className="h-3 w-3" /> Retry

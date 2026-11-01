@@ -22,6 +22,7 @@ import {
   Award,
 } from "lucide-react";
 import { AnimatedSolarSky } from "@/components/AnimatedSolarSky";
+import { SunPowerLogo } from "@/components/SunPowerLogo";
 import { useSession, logout } from "@/hooks/useSession";
 import { formatINR } from "@/lib/utils";
 import { Button } from "@/components/ui";
@@ -93,17 +94,15 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-lime-400 text-slate-950 shadow-md group-hover:scale-105 transition">
-              <SunMedium className="h-6 w-6 text-slate-950 animate-pulse" />
-            </div>
+            <SunPowerLogo size="md" variant="dark" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-base font-extrabold tracking-tight text-white">SolarOps AI</span>
+                <span className="text-base font-extrabold tracking-tight text-white">SunPower</span>
                 <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/30">
                   Cloud PV
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400">SunPower Solutions</p>
+              <p className="text-[10px] text-slate-400">Intelligent Solar Operations</p>
             </div>
           </Link>
 
@@ -526,7 +525,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl">
           <div className="text-center mb-12">
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white">How Your Installation Works</h2>
-            <p className="mt-2 text-sm text-slate-400">Tracked in real-time in your SolarOps Customer Portal.</p>
+            <p className="mt-2 text-sm text-slate-400">Tracked in real-time in your SunPower Customer Portal.</p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -597,9 +596,9 @@ export default function LandingPage() {
       {/* 7. FOOTER */}
       <footer className="mt-auto border-t border-white/10 bg-slate-950 py-10 px-4 text-xs text-slate-500">
         <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-slate-400">
-            <SunMedium className="h-4 w-4 text-emerald-400" />
-            <span className="font-semibold text-slate-300">SolarOps AI</span> — From First Lead to Lifetime Solar Service
+          <div className="flex items-center gap-2.5 text-slate-400">
+            <SunPowerLogo size="xs" variant="bare" />
+            <span className="font-semibold text-slate-300">SunPower</span> — From First Lead to Lifetime Solar Service
           </div>
           <div className="flex gap-4">
             <Link to="/login" className="hover:text-slate-300 transition">Sign In</Link>
